@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '35';
+const ASSETS_V = '37';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -553,18 +553,18 @@ function animarChegadaBoss() {
 // o pack nomeia cada preview pela peça que ele representa
 const BUILDS_HEROI = {
   heroi: Object.freeze({
-    base: 'hero_builds/base.webp', lamina: 'hero_builds/lamina.webp',
-    mira: 'hero_builds/mira.webp', amuleto: 'hero_builds/amuleto.webp',
-    fogo: 'hero_builds/fogo.webp', gelo: 'hero_builds/gelo.webp',
-    raio: 'hero_builds/raio.webp', talisma: 'hero_builds/talisma.webp',
-    radiante: 'hero_builds/radiante.webp'
+    base: 'sprite_request/hero/presets/base.webp', lamina: 'sprite_request/hero/presets/lamina.webp',
+    mira: 'sprite_request/hero/presets/mira.webp', amuleto: 'sprite_request/hero/presets/amuleto.webp',
+    fogo: 'sprite_request/hero/presets/fogo.webp', gelo: 'sprite_request/hero/presets/gelo.webp',
+    raio: 'sprite_request/hero/presets/raio.webp', talisma: 'sprite_request/hero/presets/talisma.webp',
+    radiante: 'sprite_request/hero/presets/radiante.webp'
   }),
   antimodelo: Object.freeze({
-    base: 'anti_builds/base.webp', lamina: 'anti_builds/lamina.webp',
-    mira: 'anti_builds/mira.webp', amuleto: 'anti_builds/amuleto.webp',
-    fogo: 'anti_builds/fogo.webp', gelo: 'anti_builds/gelo.webp',
-    raio: 'anti_builds/raio.webp', talisma: 'anti_builds/talisma.webp',
-    radiante: 'anti_builds/radiante.webp'
+    base: 'sprite_request/antimodelo_666/presets/base.webp', lamina: 'sprite_request/antimodelo_666/presets/lamina.webp',
+    mira: 'sprite_request/antimodelo_666/presets/mira.webp', amuleto: 'sprite_request/antimodelo_666/presets/amuleto.webp',
+    fogo: 'sprite_request/antimodelo_666/presets/fogo.webp', gelo: 'sprite_request/antimodelo_666/presets/gelo.webp',
+    raio: 'sprite_request/antimodelo_666/presets/raio.webp', talisma: 'sprite_request/antimodelo_666/presets/talisma.webp',
+    radiante: 'sprite_request/antimodelo_666/presets/radiante.webp'
   })
 };
 
@@ -591,7 +591,7 @@ function renderHeroi() {
   const arq = pasta[build];
   heroi.dataset.heroi = familia;
   heroi.dataset.build = String(build);
-  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}?v=${ASSETS_V}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
+  heroi.innerHTML = `<img class="modelo-img heroi-img" src="${arq}?v=${ASSETS_V}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
 }
 
 /* ---------- ícones do pack Crusader (SVG por forma, slot e raridade) ---------- */

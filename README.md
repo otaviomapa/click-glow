@@ -31,18 +31,21 @@ chefes Baphomet, Lilith e Lúcifer.
 
 ## Herói e fase secreta
 
-- **Herói normal:** cruzado (`personagens/heroi-cruzado.webp`).
-- **Fase secreta 666:** após a bênção, o herói usa o visual de build do
-  **antimodelo 666** (`personagens/anti_builds/`).
-- Há **9 variações nomeadas por personagem** (`personagens/hero_builds/` e
-  `personagens/anti_builds/`): `base`, `lamina`, `mira`, `amuleto`, `fogo`,
-  `gelo`, `raio`, `talisma` e `radiante`. O visual segue a peça mais forte
-  equipada; luva elemental escolhe `fogo`/`gelo`/`raio` e qualquer radiante
-  impõe o visual `radiante`.
+- **Herói normal:** cruzado. **Fase secreta 666:** após a bênção, o jogo troca
+  para o antimodelo 666 mantendo a mesma build.
+- Os retratos em tempo real vêm de `sprite_request/hero/presets/` e
+  `sprite_request/antimodelo_666/presets/`: `base`, `lamina`, `mira`, `amuleto`,
+  `fogo`, `gelo`, `raio`, `talisma` e `radiante`. O visual segue a peça mais
+  forte equipada; luva elemental escolhe `fogo`/`gelo`/`raio` e qualquer
+  radiante impõe o visual `radiante`.
+- O pacote modular (`sprite_request/`) traz 37 camadas PNG por forma,
+  `build_manifest.json`, `sprite_build_response.json` e `contact_sheet.png`.
+  Ele resolve as 20.736 combinações de slots, raridades e elementos sem
+  precisar de uma imagem por combinação.
+- Os retratos antigos em `personagens/hero_builds/` e `personagens/anti_builds/`
+  ficam só como reserva; o jogo não os carrega mais.
 - ícones vêm do pack Crusader: 7 categorias × 5 raridades × 2 formas em
   `icones/hero/` e `icones/antimodel/`; a luva troca de ícone com o elemento.
-- Os previews são concept art recortada, ainda não sprites modulares/animados.
-  As folhas de conceito do pacote ficam só como referência, não entram no jogo.
 - Os inimigos são espelhados (`scaleX(-1)`) para encarar o herói à esquerda.
 
 ## Lista completa de itens

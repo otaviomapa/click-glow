@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "origem": "Reconstruido no projeto a partir dos presets validados do pack Crusader; o ZIP recebido continha apenas RGBA (0,0,0,0).",
+  "forms_processed": [
+    "hero",
+    "antimodelo_666"
+  ],
+  "layer_counts": {
+    "hero_png_layers": 37,
+    "antimodelo_666_png_layers": 37,
+    "total_layers": 74
+  },
+  "preset_counts": {
+    "hero_webp_presets": 9,
+    "antimodelo_666_webp_presets": 9,
+    "total_presets": 18
+  },
+  "validation_checks": {
+    "alpha_bbox": "PASS em todas as camadas e presets",
+    "pivot_alignment": "PASS [192,500]",
+    "corner_alpha": "PASS",
+    "geometry_lock": "PASS",
+    "sem_texto_ou_fundo": "PASS"
+  }
+}

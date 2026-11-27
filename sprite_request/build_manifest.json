@@ -1,0 +1,80 @@
+{
+  "forms": [
+    "hero",
+    "antimodelo_666"
+  ],
+  "canvas": {
+    "width": 384,
+    "height": 512,
+    "color_space": "sRGB",
+    "format": "RGBA"
+  },
+  "pivot": [
+    192,
+    500
+  ],
+  "layers": [
+    "base",
+    "weapon",
+    "chest",
+    "helmet_chest",
+    "glove_left",
+    "belt_cape",
+    "aura_final"
+  ],
+  "build_rules": {
+    "compositing_order": [
+      "sprite_request/{form}/base.png",
+      "sprite_request/{form}/weapon/lamina/{rarity_arma}.png",
+      "sprite_request/{form}/chest/amuleto/{rarity_amuleto}.png",
+      "sprite_request/{form}/helmet_chest/mira/{rarity_mira}.png",
+      "sprite_request/{form}/glove_left/{elemento_luva}/{rarity_luva}.png",
+      "sprite_request/{form}/belt_cape/talisma/{rarity_talisma}.png",
+      "sprite_request/{form}/aura_final/radiante.png"
+    ],
+    "radiante_override_rule": "Se qualquer slot for radiante, aplicar aura_final/radiante.png em screen/add.",
+    "resolution_formula": "6^4 * 16 = 20736 combinacoes resolvidas pelas camadas modulares."
+  },
+  "presets": {
+    "base": [
+      "base.png"
+    ],
+    "lamina": [
+      "base.png",
+      "weapon/lamina/epico.png"
+    ],
+    "mira": [
+      "base.png",
+      "helmet_chest/mira/epico.png"
+    ],
+    "amuleto": [
+      "base.png",
+      "chest/amuleto/epico.png"
+    ],
+    "fogo": [
+      "base.png",
+      "glove_left/fogo/epico.png"
+    ],
+    "gelo": [
+      "base.png",
+      "glove_left/gelo/epico.png"
+    ],
+    "raio": [
+      "base.png",
+      "glove_left/raio/epico.png"
+    ],
+    "talisma": [
+      "base.png",
+      "belt_cape/talisma/epico.png"
+    ],
+    "radiante": [
+      "base.png",
+      "weapon/lamina/radiante.png",
+      "chest/amuleto/radiante.png",
+      "helmet_chest/mira/radiante.png",
+      "glove_left/fogo/radiante.png",
+      "belt_cape/talisma/radiante.png",
+      "aura_final/radiante.png"
+    ]
+  }
+}
