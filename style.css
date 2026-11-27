@@ -1901,12 +1901,7 @@ body.luta-pausada .seringa, body.luta-pausada .adaga { display: none; }
   color: #dcb878; font: 800 11px/1.55 "Rajdhani", sans-serif;
   letter-spacing: .12em; text-transform: uppercase;
 }
-body.provacao-ativa .coluna,
-body.provacao-ativa .nav-inferior,
-body.provacao-ativa #btnStats {
-  opacity: .32; filter: grayscale(.7);
-}
-/* o toque chega nos guardas de JS, que avisam o porquê em vez de morrer em silêncio */
+/* jornada: loja e inventário seguem utilizáveis desde o primeiro clique */
 
 /* ---------- menu inicial & escolha divina ---------- */
 body.pre-jogo { overflow: hidden; }

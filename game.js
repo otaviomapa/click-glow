@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '31';
+const ASSETS_V = '32';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -991,7 +991,6 @@ function verificarConquistas() {
 function abrirOverlay(tipo) {
   const overlay = el('overlay');
   if (!overlay) return;
-  if (provacaoAtiva && tipo !== 'settings') { avisarProvacao(); return; }
   const titulo = el('overlayTitulo');
   const corpo = el('overlayConteudo');
 
@@ -1275,7 +1274,7 @@ function ativarMagia() {
 }
 
 function upgradeMagia() {
-  if (provacaoAtiva) return;
+  if (provacaoAtiva) { avisarProvacao(); return; }
   const custo = custoMagia();
   if (moedas < custo) return;
   moedas -= custo;
@@ -1462,7 +1461,7 @@ function atualizarCompras() {
     btn.title = item && moedas < item.preco ? `Faltam ${item.preco - moedas} moedas` : '';
     btn.closest('.item')?.classList.toggle('pode-comprar', !btn.disabled);
   });
-  if (magiaUpgradeBtn) magiaUpgradeBtn.disabled = provacaoAtiva || moedas < custoMagia();
+  if (magiaUpgradeBtn) magiaUpgradeBtn.disabled = moedas < custoMagia();
 }
 
 function renderHUD(comRota = true) {
@@ -1568,8 +1567,8 @@ function renderMagia() {
   magiaAtivarBtn.textContent = magia.ativada
     ? '⚡ ATIVO AUTOMÁTICO'
     : luva ? '⏳ AGUARDANDO MONSTRO' : '⏳ SEM LUVA';
-  magiaUpgradeBtn.disabled = provacaoAtiva || moedas < custoMagia();
-  magiaUpgradeBtn.title = provacaoAtiva ? 'Disponível após o desafio' : '';
+  magiaUpgradeBtn.disabled = moedas < custoMagia();
+  magiaUpgradeBtn.title = '';
   document.querySelectorAll('.elem-btn').forEach(b => {
     b.classList.toggle('ativo', !!luva && b.dataset.poder === magia.elemento);
     b.setAttribute('aria-disabled', String(provacaoAtiva));
@@ -1590,7 +1589,6 @@ function renderTudo() {
 /* ---------- ações ---------- */
 
 function rerolarLoja() {
-  if (provacaoAtiva) { avisarProvacao(); return false; }
   if (rolls < 1) {
     mostrarMensagem('SEM ROLLS! MATE UM MONSTRO 🎲');
     return false;
@@ -1603,7 +1601,6 @@ function rerolarLoja() {
 }
 
 function comprar(id) {
-  if (provacaoAtiva) { avisarProvacao(); return; }
   const btn = document.querySelector(`[data-comprar="${id}"]`);
   const r = btn?.getBoundingClientRect();
   const indice = loja.findIndex(i => i && i.id === id);
@@ -1629,7 +1626,6 @@ function comprar(id) {
 }
 
 function equipar(id) {
-  if (provacaoAtiva) { avisarProvacao(); return; }
   const item = inventario.find(i => i.id === id);
   if (!item) return;
   equipados[item.slot] = item;
@@ -2454,11 +2450,9 @@ el('somBtn').addEventListener('click', () => {
   if (somAtivo) tocarSom('moeda');
 });
 el('rerolar').addEventListener('click', () => {
-  if (provacaoAtiva) { avisarProvacao(); return; }
   if (rerolarLoja()) flutuante('LOJA ROLADA!', '#9fb4c7', 90);
 });
 el('itensLoja').addEventListener('click', e => {
-  if (provacaoAtiva) { avisarProvacao(); return; } // loja só depois do Boss
   const comprado = e.target.closest('.item.comprado');
   if (comprado) { flutuante('COMPRADO — ROLE A LOJA 🎲', '#9fb4c7', 90); return; }
   const row = e.target.closest('.item[data-item-id]');
@@ -2477,7 +2471,6 @@ el('itensLoja').addEventListener('click', e => {
   comprar(item.id);
 });
 el('inventario').addEventListener('click', e => {
-  if (provacaoAtiva) { avisarProvacao(); return; } // inventário só depois do Boss
   const b = e.target.closest('[data-equipar]');
   if (b) equipar(Number(b.dataset.equipar));
 });
@@ -2500,7 +2493,6 @@ el('overlay').addEventListener('click', e => {
   if (e.target === el('overlay')) fecharOverlay();
 });
 el('navInferior').addEventListener('click', e => {
-  if (provacaoAtiva) { avisarProvacao(); return; } // nav liberada após o Boss
   const b = e.target.closest('[data-nav]');
   if (!b) return;
   el('navInferior').querySelectorAll('button').forEach(n => n.classList.toggle('ativo', n === b));
