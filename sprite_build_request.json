@@ -1,0 +1,456 @@
+{
+  "request_id": "click-glow-hero-build-variations-v1",
+  "title": "Sistema modular de sprites para todas as builds do Cruzado e do Antimodelo 666",
+  "version": "1.0",
+  "date": "2026-11-27",
+  "language": "pt-BR",
+  "role": "Você é um artista técnico de sprites 2D. Entregue um sistema de camadas modulares, não uma pilha de imagens repetidas.",
+  "prompt": "Crie, para o jogo Click Glow, um conjunto completo e consistente de variações de sprite do herói Cruzado e da forma secreta Antimodelo 666. Não gere 20736 imagens planas. Gere camadas PNG modulares com transparência, um pivô fixo nos pés e regras determinísticas de composição, mais os 9 retratos finais por forma que o jogo usa em tempo real: base, lamina, mira, amuleto, fogo, gelo, raio, talisma e radiante. Todas as camadas precisam compartilhar exatamente o mesmo contorno, proporção, postura, iluminação, origem e linha de base. A raridade altera apenas material, brilho e acentos; o elemento altera apenas a luva e a aura; radiante impõe uma aura final sem mudar a anatomia. Não use texto, etiquetas, moldura, checkerboard, fundo opaco, sombra bakers que quebre a composição nem mudanças de rosto/elmo entre variações. Entregue também um build_manifest.json mapeando cada combinação de slots, raridades e elementos para a pilha de camadas correspondente, e uma contact sheet de validação.",
+  "context": {
+    "game": "Click Glow — Arena de Monstros",
+    "repo": "https://github.com/otaviomapa/click-glow",
+    "runtime_files": ["index.html", "style.css", "game.js"],
+    "do_not_modify": ["index.html", "style.css", "game.js", "README.md"],
+    "current_build_logic": "A peça de maior raridade define o visual; luva elemental escolhe fogo/gelo/raio; qualquer item radiante impõe radiante. buildFoco desempata peças de mesma raridade.",
+    "current_runtime_presets": [
+      "base",
+      "lamina",
+      "mira",
+      "amuleto",
+      "fogo",
+      "gelo",
+      "raio",
+      "talisma",
+      "radiante"
+    ]
+  },
+  "reference_images": [
+    {
+      "path": "personagens/hero_builds/base.webp",
+      "use": "silhueta, proporção e acabamento do Cruzado"
+    },
+    {
+      "path": "personagens/hero_builds/radiante.webp",
+      "use": "intensidade e linguagem da aura radiante"
+    },
+    {
+      "path": "personagens/anti_builds/base.webp",
+      "use": "silhueta e tint base do Antimodelo 666"
+    },
+    {
+      "path": "concept_sheets/hero_full_reference.png",
+      "use": "referência conceitual ampla; se o arquivo não estiver disponível, siga a descrição textual deste JSON"
+    },
+    {
+      "path": "concept_sheets/hero_equipment_variations.png",
+      "use": "referência de variações de equipamento; se não estiver disponível, siga o catálogo de módulos abaixo"
+    }
+  ],
+  "combination_space": {
+    "slots": [
+      {
+        "id": "arma",
+        "options": ["vazio", "comum", "incomum", "raro", "epico", "radiante"],
+        "module": "lamina"
+      },
+      {
+        "id": "mira",
+        "options": ["vazio", "comum", "incomum", "raro", "epico", "radiante"],
+        "module": "mira"
+      },
+      {
+        "id": "amuleto",
+        "options": ["vazio", "comum", "incomum", "raro", "epico", "radiante"],
+        "module": "amuleto"
+      },
+      {
+        "id": "luva",
+        "options": [
+          "vazio",
+          "comum:fogo",
+          "comum:gelo",
+          "comum:raio",
+          "incomum:fogo",
+          "incomum:gelo",
+          "incomum:raio",
+          "raro:fogo",
+          "raro:gelo",
+          "raro:raio",
+          "epico:fogo",
+          "epico:gelo",
+          "epico:raio",
+          "radiante:fogo",
+          "radiante:gelo",
+          "radiante:raio"
+        ],
+        "module": "luva_[elemento]"
+      },
+      {
+        "id": "talisma",
+        "options": ["vazio", "comum", "incomum", "raro", "epico", "radiante"],
+        "module": "talisma"
+      }
+    ],
+    "total_states_including_empty": 20736,
+    "formula": "6^4 * 16 = 20736",
+    "resolution_strategy": "modular layers + deterministic compositing; nunca rasterizar todos os estados",
+    "runtime_visible_states": 9
+  },
+  "forms": [
+    {
+      "id": "hero",
+      "name": "Cruzado",
+      "required": true,
+      "palette_anchor": ["#1a1118", "#7d1f2e", "#d7b16a", "#f2e6cf"],
+      "path_prefix": "sprite_request/hero"
+    },
+    {
+      "id": "antimodelo_666",
+      "name": "Antimodelo 666",
+      "required": true,
+      "palette_anchor": ["#140610", "#8e1038", "#d938ff", "#ff3b6b"],
+      "path_prefix": "sprite_request/antimodelo_666",
+      "note": "Mesma geometria do Cruzado; mude apenas a linguagem visual para corrupção demoníaca. Não redesenhe a silhueta."
+    }
+  ],
+  "asset_spec": {
+    "canvas": {
+      "width": 384,
+      "height": 512,
+      "mode": "RGBA",
+      "background": "transparente",
+      "color_space": "sRGB",
+      "bit_depth": 8,
+      "export_layers_as": "PNG",
+      "export_presets_as": "WebP lossless"
+    },
+    "frame": {
+      "view": "3/4 frontal, herói ligeiramente virado para a direita",
+      "pose": "idle, pé no chão, braço da espada descansando, ombros nivelados",
+      "pivot": { "x": 192, "y": 500 },
+      "baseline_y": 500,
+      "safe_area": { "top": 24, "bottom": 12, "left": 8, "right": 8 },
+      "alpha_bbox_target": { "min_width": 300, "max_width": 350, "min_height": 360, "max_height": 420 }
+    },
+    "style": {
+      "genre": "dark fantasy gótico",
+      "rendering": "pintura cel com linhas limpas e acabamento metálico",
+      "lighting": "luz difusa do alto à esquerda, contraste médio, brilho metálico quente",
+      "materials": ["aço polido", "ouro velho", "couro escuro", "tecido carmesim", "pedras preciosas"],
+      "line_weight": "contorno externo 2-3 px em 384x512, contornos internos 1 px",
+      "no": [
+        "texto",
+        "números",
+        "logo",
+        "watermark",
+        "moldura",
+        "etiqueta",
+        "checkerboard",
+        "fundo opaco",
+        "sombra projetada no chão",
+        "mudança de anatomia entre camadas",
+        "spritesheet animado",
+        "pixel art"
+      ]
+    },
+    "consistency_locks": [
+      "Mesmo rosto, elmo, capa, quantidade de dobras e posição de mãos em todas as camadas.",
+      "Mesmo pivô (192,500) e mesma linha de base em todos os arquivos.",
+      "Camadas são recortes transparentes: nunca pinte fundo e nunca pré-componha o resultado final.",
+      "A silhueta externa só muda quando o módulo explicitamente adiciona arma, aura ou partícula.",
+      "Raridade muda material/brilho/accent, nunca formato do corpo ou do equipamento.",
+      "Elemento muda luva, aura e partículas, nunca rosto, armadura ou espada.",
+      "Radiante adiciona aura final; não substitui os módulos de slot.",
+      "Antes de salvar, alinhe cada camada por alpha_bbox e descarte offset superior a 2 px."
+    ]
+  },
+  "module_catalog": [
+    {
+      "id": "base",
+      "layer": "base",
+      "description": "Corpo completo do Cruzado sem equipamento: elmo, armadura, capa, botas, mãos vazias.",
+      "rarity_variants": false,
+      "element_variants": false
+    },
+    {
+      "id": "lamina",
+      "layer": "weapon",
+      "description": "Espada na mão direita, lâmina longa com guarda dourada e runas.",
+      "rarity_variants": true,
+      "element_variants": false
+    },
+    {
+      "id": "mira",
+      "layer": "helmet_chest",
+      "description": "Mira angular no elmo e pequeno anel de mira no peito, sem cobrir o rosto.",
+      "rarity_variants": true,
+      "element_variants": false
+    },
+    {
+      "id": "amuleto",
+      "layer": "chest",
+      "description": "Amuleto escaravelho pendurado no peito, corrente curta e brilho central.",
+      "rarity_variants": true,
+      "element_variants": false
+    },
+    {
+      "id": "luva_fogo",
+      "layer": "glove_left",
+      "description": "Luva esquerda com chama baixa e faíscas subindo, sem invadir o rosto.",
+      "rarity_variants": true,
+      "element_variants": true
+    },
+    {
+      "id": "luva_gelo",
+      "layer": "glove_left",
+      "description": "Luva esquerda com cristal de gelo, respiração fria e partículas hexagonais.",
+      "rarity_variants": true,
+      "element_variants": true
+    },
+    {
+      "id": "luva_raio",
+      "layer": "glove_left",
+      "description": "Luva esquerda com arco elétrico curto e faíscas azul-violeta.",
+      "rarity_variants": true,
+      "element_variants": true
+    },
+    {
+      "id": "talisma",
+      "layer": "belt_cape",
+      "description": "Talismã de trevo preso ao cinto, com pequeno rasto na capa.",
+      "rarity_variants": true,
+      "element_variants": false
+    },
+    {
+      "id": "radiante",
+      "layer": "aura_final",
+      "description": "Aura arco-íris dourada, partículas prismáticas e contorno luminoso final.",
+      "rarity_variants": false,
+      "element_variants": false
+    }
+  ],
+  "rarity_palettes": [
+    {
+      "id": "comum",
+      "name": "Comum",
+      "accent": "#c9d1d9",
+      "emission": 0.05,
+      "metal": "aço fosco",
+      "gem": "incolor"
+    },
+    {
+      "id": "incomum",
+      "name": "Incomum",
+      "accent": "#79bf8b",
+      "emission": 0.2,
+      "metal": "aço com pátina verde",
+      "gem": "esmeralda"
+    },
+    {
+      "id": "raro",
+      "name": "Raro",
+      "accent": "#6f9ec4",
+      "emission": 0.45,
+      "metal": "aço azulado",
+      "gem": "safira"
+    },
+    {
+      "id": "epico",
+      "name": "Épico",
+      "accent": "#a98bc9",
+      "emission": 0.75,
+      "metal": "ouro-violeta",
+      "gem": "ametista"
+    },
+    {
+      "id": "radiante",
+      "name": "Radiante",
+      "accent": "#d9cde8",
+      "emission": 1.0,
+      "metal": "ouro prismático",
+      "gem": "arco-íris",
+      "note": "Aplica também a camada aura_final; não muda a anatomia."
+    }
+  ],
+  "element_palettes": [
+    {
+      "id": "fogo",
+      "accent": "#ff7a3d",
+      "secondary": "#ffd16a",
+      "particle": "faísca quente"
+    },
+    {
+      "id": "gelo",
+      "accent": "#7fd4ff",
+      "secondary": "#e8f7ff",
+      "particle": "cristal hexagonal"
+    },
+    {
+      "id": "raio",
+      "accent": "#b98cff",
+      "secondary": "#7fe9ff",
+      "particle": "arco elétrico"
+    }
+  ],
+  "compositing": {
+    "order": [
+      "base",
+      "cape_back",
+      "weapon",
+      "chest",
+      "helmet_chest",
+      "glove_left",
+      "belt_cape",
+      "aura_final",
+      "foreground_particles"
+    ],
+    "blend_rules": {
+      "base": "normal, opacidade 100",
+      "weapon": "normal, sombra própria já incluída na camada",
+      "glove_left": "normal; partículas usam screen/add com alpha baixo",
+      "aura_final": "screen/add, opacidade 85-100 conforme raridade",
+      "foreground_particles": "screen/add, nunca cobrir mais de 8% da silhueta"
+    },
+    "rarity_resolution": "Entre módulos de slots diferentes, o de maior raridade define o preset principal; buildFoco decide empate.",
+    "radiante_override": "Se qualquer slot estiver radiante, inclua aura_final e exporte o preset radiante.",
+    "alpha_rule": "Nenhuma camada pode conter pixels opacos fora da safe area; nenhuma pode deslocar o pivot."
+  },
+  "deliverables": {
+    "layers_per_form": {
+      "count_min": 45,
+      "files": [
+        "base.png",
+        "weapon/lamina/comum.png",
+        "weapon/lamina/incomum.png",
+        "weapon/lamina/raro.png",
+        "weapon/lamina/epico.png",
+        "weapon/lamina/radiante.png",
+        "helmet_chest/mira/comum.png",
+        "helmet_chest/mira/incomum.png",
+        "helmet_chest/mira/raro.png",
+        "helmet_chest/mira/epico.png",
+        "helmet_chest/mira/radiante.png",
+        "chest/amuleto/comum.png",
+        "chest/amuleto/incomum.png",
+        "chest/amuleto/raro.png",
+        "chest/amuleto/epico.png",
+        "chest/amuleto/radiante.png",
+        "glove_left/fogo/comum.png",
+        "glove_left/fogo/incomum.png",
+        "glove_left/fogo/raro.png",
+        "glove_left/fogo/epico.png",
+        "glove_left/fogo/radiante.png",
+        "glove_left/gelo/comum.png",
+        "glove_left/gelo/incomum.png",
+        "glove_left/gelo/raro.png",
+        "glove_left/gelo/epico.png",
+        "glove_left/gelo/radiante.png",
+        "glove_left/raio/comum.png",
+        "glove_left/raio/incomum.png",
+        "glove_left/raio/raro.png",
+        "glove_left/raio/epico.png",
+        "glove_left/raio/radiante.png",
+        "belt_cape/talisma/comum.png",
+        "belt_cape/talisma/incomum.png",
+        "belt_cape/talisma/raro.png",
+        "belt_cape/talisma/epico.png",
+        "belt_cape/talisma/radiante.png",
+        "aura_final/radiante.png"
+      ]
+    },
+    "presets_per_form": {
+      "count": 9,
+      "files": [
+        "presets/base.webp",
+        "presets/lamina.webp",
+        "presets/mira.webp",
+        "presets/amuleto.webp",
+        "presets/fogo.webp",
+        "presets/gelo.webp",
+        "presets/raio.webp",
+        "presets/talisma.webp",
+        "presets/radiante.webp"
+      ]
+    },
+    "manifest": "build_manifest.json",
+    "contact_sheet": "contact_sheet.png",
+    "response_file": "sprite_build_response.json"
+  },
+  "manifest_contract": {
+    "format": "JSON UTF-8",
+    "top_level_keys": ["forms", "canvas", "pivot", "layers", "presets", "build_rules"],
+    "entry_schema": {
+      "form": "hero|antimodelo_666",
+      "preset": "base|lamina|mira|amuleto|fogo|gelo|raio|talisma|radiante",
+      "layers": ["caminho da camada em ordem de composição"],
+      "rarity": "comum|incomum|raro|epico|radiante|null",
+      "element": "fogo|gelo|raio|null",
+      "pivot": [192, 500]
+    },
+    "must_cover": "Todas as 20736 combinações devem ser resolvíveis pela função de composição descrita, sem precisar listar 20736 entradas."
+  },
+  "acceptance_criteria": [
+    "Kit completo para as duas formas: Cruzado e Antimodelo 666.",
+    "Pelo menos 45 camadas PNG por forma, todas 384x512 RGBA com mesmo pivô.",
+    "9 presets WebP por forma, 18 no total, com o mesmo recorte usado hoje pelo jogo.",
+    "Ao trocar só a raridade, o rosto, a silhueta e o pivô permanecem idênticos.",
+    "Ao trocar só o elemento da luva, elmo, espada e capa permanecem idênticos.",
+    "Modo 666 mantém geometria idêntica ao Cruzado e muda apenas cor/textura/energia.",
+    "Nenhuma camada com texto, moldura, checkerboard, fundo opaco ou sombra bakeada no chão.",
+    "build_manifest.json resolve qualquer combinação de slots, raridades e elementos.",
+    "Contact sheet com 9 presets de cada forma lado a lado, fundo neutro escuro.",
+    "Arquivos nomeados exatamente como em deliverables, sem espaços e sem acentos."
+  ],
+  "validation_checks": [
+    "alpha_bbox de todas as camadas dentro de min_width 300, max_width 350, min_height 360, max_height 420.",
+    "Diferença de pivot entre camadas menor ou igual a 2 px.",
+    "Alpha dos cantos igual a 0 em todas as camadas.",
+    "Preset base sem nenhuma camada de equipamento visível.",
+    "Preset radiante contém aura_final e mantém o corpo do preset base.",
+    "Ícones de luva fogo/gelo/raio correspondem ao elemento do preset.",
+    "Contact sheet sem arte cortada no topo ou nos pés."
+  ],
+  "negative_prompt": [
+    "text",
+    "label",
+    "watermark",
+    "logo",
+    "frame",
+    "border",
+    "checkerboard",
+    "opaque background",
+    "white background",
+    "different face",
+    "different helmet",
+    "different height",
+    "changed proportions",
+    "extra limbs",
+    "floating feet",
+    "ground shadow",
+    "pixel art",
+    "anime chibi",
+    "lowres",
+    "blurry alpha",
+    "rim-light only"
+  ],
+  "seed_strategy": {
+    "base_seed": 666,
+    "lock_seed_per_form": true,
+    "increment_seed_per_module": true,
+    "rule": "Use a mesma seed para todas as variantes de raridade de um módulo; isso trava o desenho e muda só cor/brilho."
+  },
+  "response_format": {
+    "must_return": [
+      "árvore de arquivos criados",
+      "build_manifest.json",
+      "contact_sheet.png",
+      "sprite_build_response.json com contagens por formato e checks de validação"
+    ],
+    "must_not_return": [
+      "código JavaScript modificado",
+      "explicação longa",
+      "sugestões fora do escopo",
+      "links externos"
+    ]
+  }
+}
