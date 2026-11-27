@@ -2609,8 +2609,16 @@ function carregarJogo() {
 
 function resetarSave() {
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
+  // impede que beforeunload/intervalo regravem o save apagado durante o reload
+  addEventListener('beforeunload', salvarJogo, { once: true, capture: true });
+  _resetandoSave = true;
   location.reload();
 }
+
+let _resetandoSave = false;
+function salvarJogo() {
+  if (_resetandoSave) return;
+  try {
 
 document.addEventListener('visibilitychange', () => {
   document.body.classList.toggle('pausado', document.hidden);
