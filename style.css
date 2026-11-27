@@ -499,9 +499,19 @@ body.modo-capeta .nome-monstro.chefe { color: #ff6b6b; }
   pointer-events: none; user-select: none;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6));
 }
-.heroi[data-heroi="antimodelo"] {
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(217,56,255,.75));
+.heroi .heroi-build-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.16);
+  transform-origin: 50% 92%;
+  pointer-events: none; user-select: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6));
 }
+.heroi[data-heroi="antimodelo"] .heroi-img { display: none; }
+.heroi[data-heroi="antimodelo"] .heroi-build-img { filter: drop-shadow(0 0 22px rgba(217, 56, 255, .75)); }
+.heroi[data-build="1"] .heroi-build-img { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c3) 70%, transparent)); }
 .heroi.atirando { animation: arremessar .32s cubic-bezier(.22,1.35,.4,1); }
 @keyframes arremessar {
   0%   { transform: translateX(0) rotate(0) scale(1); }

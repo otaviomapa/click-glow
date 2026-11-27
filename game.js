@@ -537,12 +537,30 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
-/* ---------- herói cruzado e antimodelo 666 (sprites do pacote) ---------- */
+const BUILDS_HEROI = {
+  heroi: Object.freeze(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [i + 1, `hero_builds/build_${i + 1}.webp`]))),
+  antimodelo: Object.freeze(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [i + 1, `anti_builds/build_${i + 1}.webp`])))
+};
+
+function buildVisualAtual() {
+  const itens = Object.values(equipados).filter(Boolean);
+  if (!itens.length) return 1;
+  const forcas = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
+  const soma = itens.reduce((total, item) => total + (forcas[item.rar] ?? 0) + (item.poder ? ({ fogo: 0, gelo: 1, raio: 2 }[item.poder] || 0) : 0), 0);
+  const perfil = Math.round(soma / itens.length);
+  const mascara = itens.reduce((mask, item) => mask ^ ((item.slot.length * 13 + (forcas[item.rar] || 0) * 7 + (item.poder ? ({ fogo: 1, gelo: 3, raio: 5 }[item.poder] || 0) : 0)) & 255), 0);
+  return 1 + ((perfil * 2 + (mascara % 7) + itens.length * 2) % 9);
+}
+
 function renderHeroi() {
-  const capeta = modoCapeta;
-  const arq = capeta ? 'antimodelo-666.webp' : 'heroi-cruzado.webp';
-  heroi.dataset.heroi = capeta ? 'antimodelo' : 'cruzado';
-  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}" alt="${capeta ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
+  const antimodelo = modoCapeta;
+  const familia = antimodelo ? 'antimodelo' : 'heroi';
+  const build = buildVisualAtual();
+  const pasta = BUILDS_HEROI[familia];
+  const arq = pasta[build];
+  heroi.dataset.heroi = familia;
+  heroi.dataset.build = String(build);
+  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${antimodelo ? 'antimodelo-666.webp' : 'heroi-cruzado.webp'}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false"><img class="modelo-img heroi-build-img" src="personagens/${arq}" alt="" draggable="false">`;
 }
 
 /* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
