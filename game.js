@@ -560,7 +560,7 @@ function renderHeroi() {
   const arq = pasta[build];
   heroi.dataset.heroi = familia;
   heroi.dataset.build = String(build);
-  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${antimodelo ? 'antimodelo-666.webp' : 'heroi-cruzado.webp'}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false"><img class="modelo-img heroi-build-img" src="personagens/${arq}" alt="" draggable="false">`;
+  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
 }
 
 /* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
