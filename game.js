@@ -111,142 +111,362 @@ const canvas = el('confete');
 const ctx = canvas.getContext('2d');
 const floaters = el('floaters');
 
-/* ---------- pixel art (desenhada em SVG, sem imagens externas) ---------- */
-const PIXEL = {
-  heroi: [
-    '................',
-    '......HHHH......',
-    '.....HhhhhH.....',
-    '....HhhhhhhH....',
-    '...HhhhhhhhhH...',
-    '.....ssssss.....',
-    '.....seesse.....',
-    '.....swwws......',
-    '....RrrrrrrR....',
-    '...RrrrrrrrrR...',
-    '..RrrRggggRrrR..',
-    '..RrrRggggRrrR..',
-    '..RrrrrrrrrrrR..',
-    '...RrrrrrrrrR...',
-    '....rrrrrrrr....',
-    '....ss....ss....'
-  ],
-  demonio: [
-    '................',
-    '..h..........h..',
-    '..hh........hh..',
-    '...hhD....Dhh...',
-    '....DDDDDDDD....',
-    '...DDDDDDDDDD...',
-    '...DDeDDDDeDD...',
-    '...DDbDDDDbDD...',
-    '....DDDDDDDD....',
-    '.....DmmmmD.....',
-    '....DffffffD....',
-    '...DDffffffDD...',
-    '...DDDDDDDDDD...',
-    '....DDDDDDDD....',
-    '.....DD..DD.....',
-    '.....dd..dd.....'
-  ],
-  adaga: [
-    '.............S..',
-    '............Sss.',
-    '...........SssS.',
-    '..........SssS..',
-    '.........SssS...',
-    '........SssS....',
-    '.......SssS.....',
-    '......SssS......',
-    '.....SssS.......',
-    '....SssS........',
-    '...SssS.........',
-    '...SggS.........',
-    '....ghg.........',
-    '....hh..........',
-    '....hh..........',
-    '................'
-  ],
-  boss: [
-    '..g..g....g..g..',
-    '.GGGGGGGGGGGGGG.',
-    '..hhDDDDDDDDhh..',
-    '..hhDDDDDDDDhh..',
-    '...DDDDDDDDDD...',
-    '...DDeDDDDeDD...',
-    '...DDbDDDDbDD...',
-    '....DDDDDDDD....',
-    '.....DffffD.....',
-    '....DDffffDD....',
-    '...DDffffffDD...',
-    '...DDDDDDDDDD...',
-    '....DDDDDDDD....',
-    '.....DD..DD.....',
-    '....fDD..DDf....',
-    '...ff......ff...'
-  ]
-};
-
-const CORES_PIXEL = {
-  heroi: { h: '#3a1a5c', H: '#6b3fa0', s: '#f4c09a', e: '#1a0b2e', w: '#f2f2f2', r: '#2e5bd6', R: '#5b8cff', g: '#ffd447' },
-  demonio: { d: '#7a0b1a', D: '#e01b2e', h: '#f0d6b0', e: '#ffd447', b: '#1a0505', m: '#3a0008', f: '#ff7a00' },
-  capetaHeroi: { d: '#1a0524', D: '#8b1bd1', h: '#d9b3ff', e: '#39ff14', b: '#05010a', m: '#2a0040', f: '#ff2eff' },
-  adaga: { s: '#b9d4ff', S: '#ffffff', g: '#ffd447', h: '#7a3b1a' },
-  boss: { D: '#b00020', d: '#4a0008', h: '#f0d6b0', e: '#ffe600', b: '#0a0000', f: '#ff6a00', g: '#ffd447', G: '#fff3a0' }
-};
-
-function pixelSvg(tipo, paleta) {
-  const cores = paleta || CORES_PIXEL[tipo];
-  let ret = '';
-  PIXEL[tipo].forEach((linha, y) => {
-    for (let x = 0; x < linha.length; x++) {
-      const cor = cores[linha[x]];
-      if (cor) ret += `<rect x="${x}" y="${y}" width="1" height="1" fill="${cor}"/>`;
-    }
-  });
-  return `<svg class="pixel" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${ret}</svg>`;
+/* ---------- modelos SVG animados (herói, adaga, monstros e boss) ---------- */
+function adagaSvg(corGuarda = '#ffd447', corElem = '') {
+  const brilho = corElem || '#9ad8ff';
+  return `<svg class="modelo-svg modelo-adaga" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="dag-blade" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stop-color="#8ab4f8"/>
+        <stop offset="55%" stop-color="#e8f3ff"/>
+        <stop offset="100%" stop-color="#ffffff"/>
+      </linearGradient>
+      <linearGradient id="dag-edge" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stop-color="${brilho}"/>
+        <stop offset="100%" stop-color="#ffffff"/>
+      </linearGradient>
+    </defs>
+    <path d="M12 52 L24 40" stroke="#5a2d16" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="11" cy="53" r="3.6" fill="${corGuarda}" stroke="#241108" stroke-width="1.2"/>
+    <path d="M18 34 L30 46" stroke="${corGuarda}" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M23 41 L54 10 L48 24 L27 41 Z" fill="url(#dag-blade)"/>
+    <path d="M23 41 L54 10 L41 16 L23 37 Z" fill="url(#dag-edge)" opacity="0.9"/>
+    <path d="M25 39 L52 12" stroke="#ffffff" stroke-width="1.2" opacity="0.85"/>
+  </svg>`;
 }
 
-function bossSvg() { return pixelSvg('boss'); }
+const MODELOS_MONSTRO = {
+  slime: () => `<svg class="modelo-svg mob-slime" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <radialGradient id="mob-slime-g" cx="38%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#b9ff9e"/>
+        <stop offset="55%" stop-color="#45c47b"/>
+        <stop offset="100%" stop-color="#175943"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="40" cy="69" rx="26" ry="5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-wobble">
+      <path d="M14 58 C12 34, 24 18, 40 18 C56 18, 68 34, 66 58 C65 66, 54 68, 40 68 C26 68, 15 66, 14 58 Z" fill="url(#mob-slime-g)" stroke="#c7ffba" stroke-width="1.6"/>
+      <ellipse cx="30" cy="30" rx="8" ry="4.5" transform="rotate(-20 30 30)" fill="rgba(255,255,255,0.55)"/>
+      <circle cx="52" cy="35" r="2.5" fill="rgba(255,255,255,0.45)" class="anim-bubble"/>
+      <circle cx="24" cy="48" r="2" fill="rgba(255,255,255,0.35)" class="anim-bubble-2"/>
+      <circle cx="31" cy="44" r="4.8" fill="#101815"/>
+      <circle cx="49" cy="44" r="4.8" fill="#101815"/>
+      <circle cx="32.5" cy="42.5" r="1.8" fill="#e8ffea"/>
+      <circle cx="50.5" cy="42.5" r="1.8" fill="#e8ffea"/>
+      <path d="M35 53 Q40 57 45 53" fill="none" stroke="#102b1e" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </svg>`,
 
-/* cada monstro da rota vira um sprite pixelado a partir do seu emoji */
-const spritesMonstro = new Map();
-function spriteMonstro(emoji) {
-  if (spritesMonstro.has(emoji)) return spritesMonstro.get(emoji);
-  let svg = '';
-  try {
-    const N = 40;
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = N;
-    const ctx = cv.getContext('2d', { willReadFrequently: true });
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '32px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-    ctx.fillText(emoji, N / 2, N / 2 + 2);
-    const d = ctx.getImageData(0, 0, N, N).data;
-    let px = '';
-    let minX = N, minY = N, maxX = -1, maxY = -1;
-    for (let y = 0; y < N; y++) {
-      for (let x = 0; x < N; x++) {
-        const i = (y * N + x) * 4;
-        if (d[i + 3] < 60) continue;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-        const r = d[i] & 0xF8, g = d[i + 1] & 0xF8, b = d[i + 2] & 0xF8;
-        px += `<rect x="${x}" y="${y}" width="1" height="1" fill="rgb(${r},${g},${b})"/>`;
-      }
-    }
-    if (px) {
-      const vx = Math.max(0, minX - 1), vy = Math.max(0, minY - 1);
-      const vw = maxX - minX + 3, vh = maxY - minY + 3;
-      svg = `<svg class="pixel" viewBox="${vx} ${vy} ${vw} ${vh}" shape-rendering="crispEdges" aria-hidden="true">${px}</svg>`;
-    }
-  } catch (err) { svg = ''; }
-  if (!svg) svg = `<span class="pixel-emoji" aria-hidden="true">${emoji}</span>`;
-  spritesMonstro.set(emoji, svg);
-  return svg;
+  bat: () => `<svg class="modelo-svg mob-bat" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-bat-w" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#6b528c"/>
+        <stop offset="100%" stop-color="#221933"/>
+      </linearGradient>
+    </defs>
+    <g class="anim-flap-l">
+      <path d="M36 42 C24 22, 10 22, 6 38 C14 38, 18 44, 16 50 C22 46, 28 48, 34 50 Z" fill="url(#mob-bat-w)" stroke="#9e82c4" stroke-width="1.2"/>
+    </g>
+    <g class="anim-flap-r">
+      <path d="M44 42 C56 22, 70 22, 74 38 C66 38, 62 44, 64 50 C58 46, 52 48, 46 50 Z" fill="url(#mob-bat-w)" stroke="#9e82c4" stroke-width="1.2"/>
+    </g>
+    <g class="anim-bob">
+      <polygon points="31,28 27,14 37,24" fill="#3b2b54" stroke="#9e82c4" stroke-width="1.2"/>
+      <polygon points="49,28 53,14 43,24" fill="#3b2b54" stroke="#9e82c4" stroke-width="1.2"/>
+      <ellipse cx="40" cy="41" rx="13" ry="15" fill="#33244a" stroke="#8a70ad" stroke-width="1.4"/>
+      <circle cx="35" cy="38" r="3.2" fill="#ff3b6b"/>
+      <circle cx="45" cy="38" r="3.2" fill="#ff3b6b"/>
+      <circle cx="35.8" cy="37.2" r="1" fill="#fff"/>
+      <circle cx="45.8" cy="37.2" r="1" fill="#fff"/>
+      <path d="M35 46 L37 49 L39 46 M41 46 L43 49 L45 46" fill="#fff"/>
+    </g>
+  </svg>`,
+
+  wolf: () => `<svg class="modelo-svg mob-wolf" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-wolf-g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#9cb0bf"/>
+        <stop offset="100%" stop-color="#36424d"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="40" cy="70" rx="22" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-bob">
+      <path d="M22 65 L28 40 L52 40 L58 65 Z" fill="#465461"/>
+      <path d="M26 42 L40 52 L54 42 L48 34 L32 34 Z" fill="#cbd7e0"/>
+      <polygon points="24,28 20,10 34,21" fill="#526270" stroke="#b6c7d4" stroke-width="1.2"/>
+      <polygon points="56,28 60,10 46,21" fill="#526270" stroke="#b6c7d4" stroke-width="1.2"/>
+      <path d="M23 30 C23 20, 57 20, 57 30 L52 46 L40 52 L28 46 Z" fill="url(#mob-wolf-g)" stroke="#c7d6e2" stroke-width="1.3"/>
+      <polygon points="32,33 37,35 32,37" fill="#ffe047"/>
+      <polygon points="48,33 43,35 48,37" fill="#ffe047"/>
+      <polygon points="37,43 43,43 40,47" fill="#182026"/>
+      <path d="M33 49 L35 53 L37 49 M43 49 L45 53 L47 49" fill="#fff"/>
+    </g>
+  </svg>`,
+
+  crab: () => `<svg class="modelo-svg mob-crab" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <radialGradient id="mob-crab-g" cx="45%" cy="35%" r="60%">
+        <stop offset="0%" stop-color="#ff8a6b"/>
+        <stop offset="65%" stop-color="#c94032"/>
+        <stop offset="100%" stop-color="#6b1a18"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="40" cy="69" rx="25" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-claw-l">
+      <path d="M22 44 C10 38, 8 24, 18 18 L20 26 L26 20 C28 28, 26 36, 24 44 Z" fill="#e0533f" stroke="#ffb299" stroke-width="1.2"/>
+    </g>
+    <g class="anim-claw-r">
+      <path d="M58 44 C70 38, 72 24, 62 18 L60 26 L54 20 C52 28, 54 36, 56 44 Z" fill="#e0533f" stroke="#ffb299" stroke-width="1.2"/>
+    </g>
+    <g class="anim-bob">
+      <path d="M20 55 L12 64 M24 58 L18 67 M60 55 L68 64 M56 58 L62 67" stroke="#b03326" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="40" cy="48" rx="21" ry="15" fill="url(#mob-crab-g)" stroke="#ffb499" stroke-width="1.5"/>
+      <line x1="33" y1="35" x2="31" y2="27" stroke="#d94a38" stroke-width="3"/>
+      <line x1="47" y1="35" x2="49" y2="27" stroke="#d94a38" stroke-width="3"/>
+      <circle cx="31" cy="26" r="4" fill="#181214" stroke="#ffd2b8" stroke-width="1"/>
+      <circle cx="49" cy="26" r="4" fill="#181214" stroke="#ffd2b8" stroke-width="1"/>
+      <circle cx="32" cy="25" r="1.4" fill="#fff"/>
+      <circle cx="50" cy="25" r="1.4" fill="#fff"/>
+      <path d="M33 52 Q40 56 47 52" fill="none" stroke="#420d0b" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </svg>`,
+
+  snake: () => `<svg class="modelo-svg mob-snake" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-snake-g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#a8e063"/>
+        <stop offset="100%" stop-color="#2c5e3b"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="40" cy="70" rx="24" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-wobble">
+      <path d="M22 62 C16 54, 24 48, 40 48 C56 48, 64 56, 56 64 C46 68, 28 68, 22 62 Z" fill="#295937" stroke="#8fd46a" stroke-width="1.3"/>
+      <path d="M28 54 C24 44, 34 40, 42 36 C48 32, 46 24, 40 20" fill="none" stroke="url(#mob-snake-g)" stroke-width="10" stroke-linecap="round"/>
+      <ellipse cx="40" cy="22" rx="12" ry="9" fill="url(#mob-snake-g)" stroke="#c2f291" stroke-width="1.3"/>
+      <circle cx="35" cy="20" r="2.6" fill="#ffe600"/>
+      <circle cx="45" cy="20" r="2.6" fill="#ffe600"/>
+      <rect x="34.5" y="18.2" width="1" height="3.6" fill="#111"/>
+      <rect x="44.5" y="18.2" width="1" height="3.6" fill="#111"/>
+      <path d="M40 30 L40 38 L37 41 M40 38 L43 41" fill="none" stroke="#ff3b5c" stroke-width="1.6" stroke-linecap="round" class="anim-tongue"/>
+    </g>
+  </svg>`,
+
+  hawk: () => `<svg class="modelo-svg mob-hawk" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-hawk-g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#d4a66a"/>
+        <stop offset="100%" stop-color="#5c3d24"/>
+      </linearGradient>
+    </defs>
+    <g class="anim-flap-l">
+      <path d="M35 38 C20 18, 6 20, 4 34 C12 36, 18 42, 24 46 L36 44 Z" fill="url(#mob-hawk-g)" stroke="#f0d29c" stroke-width="1.2"/>
+    </g>
+    <g class="anim-flap-r">
+      <path d="M45 38 C60 18, 74 20, 76 34 C68 36, 62 42, 56 46 L44 44 Z" fill="url(#mob-hawk-g)" stroke="#f0d29c" stroke-width="1.2"/>
+    </g>
+    <g class="anim-bob">
+      <ellipse cx="40" cy="45" rx="11" ry="16" fill="#6e4b2e" stroke="#e0bc84" stroke-width="1.3"/>
+      <circle cx="40" cy="26" r="10" fill="#f5efe4" stroke="#d9c8ae" stroke-width="1.2"/>
+      <polygon points="36,29 44,29 40,37" fill="#ffb703" stroke="#7a4e00" stroke-width="1"/>
+      <circle cx="35.5" cy="24" r="2.2" fill="#1a120b"/>
+      <circle cx="44.5" cy="24" r="2.2" fill="#1a120b"/>
+      <path d="M34 61 L31 67 M36 61 L36 68 M44 61 L44 68 M46 61 L49 67" stroke="#ffb703" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </svg>`,
+
+  dragon: () => `<svg class="modelo-svg mob-dragon" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-drag-g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ff6b4a"/>
+        <stop offset="60%" stop-color="#b81d24"/>
+        <stop offset="100%" stop-color="#4d0812"/>
+      </linearGradient>
+    </defs>
+    <g class="anim-flap-l">
+      <path d="M34 40 L8 18 L12 36 L6 46 L28 48 Z" fill="#8f1622" stroke="#ff9a62" stroke-width="1.2"/>
+    </g>
+    <g class="anim-flap-r">
+      <path d="M46 40 L72 18 L68 36 L74 46 L52 48 Z" fill="#8f1622" stroke="#ff9a62" stroke-width="1.2"/>
+    </g>
+    <g class="anim-bob">
+      <path d="M27 65 L31 40 L49 40 L53 65 Z" fill="url(#mob-drag-g)"/>
+      <path d="M34 44 L46 44 L44 64 L36 64 Z" fill="#ffcf70"/>
+      <polygon points="30,22 23,8 35,17" fill="#ffd477"/>
+      <polygon points="50,22 57,8 45,17" fill="#ffd477"/>
+      <rect x="27" y="18" width="26" height="22" rx="7" fill="url(#mob-drag-g)" stroke="#ff9e6d" stroke-width="1.4"/>
+      <polygon points="32,27 37,29 32,31" fill="#ffe600"/>
+      <polygon points="48,27 43,29 48,31" fill="#ffe600"/>
+      <path d="M34 36 L36 39 L38 36 M42 36 L44 39 L46 36" fill="#fff"/>
+    </g>
+  </svg>`,
+
+  ghost: () => `<svg class="modelo-svg mob-ghost" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-ghost-g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e8fbff"/>
+        <stop offset="65%" stop-color="#7cd4f5"/>
+        <stop offset="100%" stop-color="rgba(68,94,204,0.25)"/>
+      </linearGradient>
+    </defs>
+    <g class="anim-float-ghost">
+      <path d="M20 42 C20 20, 60 20, 60 42 L62 66 L52 59 L45 68 L40 59 L35 68 L28 59 L18 66 Z" fill="url(#mob-ghost-g)" stroke="#ffffff" stroke-width="1.4"/>
+      <ellipse cx="32" cy="37" rx="4.2" ry="5.5" fill="#16214d"/>
+      <ellipse cx="48" cy="37" rx="4.2" ry="5.5" fill="#16214d"/>
+      <circle cx="33" cy="35" r="1.6" fill="#8cf6ff"/>
+      <circle cx="49" cy="35" r="1.6" fill="#8cf6ff"/>
+      <ellipse cx="40" cy="48" rx="4.5" ry="5.5" fill="#16214d"/>
+    </g>
+  </svg>`,
+
+  unicorn: () => `<svg class="modelo-svg mob-unicorn" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-uni-horn" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#ff6ec7"/>
+        <stop offset="50%" stop-color="#ffe66d"/>
+        <stop offset="100%" stop-color="#7afcff"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="40" cy="70" rx="21" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-bob">
+      <path d="M28 65 L32 42 L48 42 L52 65 Z" fill="#d9cde8"/>
+      <path d="M24 34 C20 26, 26 20, 32 24" fill="#c77dff"/>
+      <polygon points="37,22 40,4 43,22" fill="url(#mob-uni-horn)" stroke="#fff" stroke-width="1"/>
+      <ellipse cx="40" cy="35" rx="14" ry="13" fill="#f2ecfa" stroke="#c7b2de" stroke-width="1.4"/>
+      <circle cx="34" cy="33" r="3" fill="#ff2e88"/>
+      <circle cx="46" cy="33" r="3" fill="#ff2e88"/>
+      <circle cx="34.8" cy="32.2" r="1" fill="#fff"/>
+      <circle cx="46.8" cy="32.2" r="1" fill="#fff"/>
+      <path d="M35 42 Q40 45 45 42" fill="none" stroke="#6c4b8c" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </svg>`,
+
+  ogre: () => `<svg class="modelo-svg mob-ogre" viewBox="0 0 80 80" aria-hidden="true">
+    <ellipse cx="40" cy="70" rx="25" ry="5" fill="rgba(0,0,0,0.45)"/>
+    <g class="anim-bob">
+      <rect x="21" y="38" width="38" height="28" rx="8" fill="#a82828" stroke="#ff9a76" stroke-width="1.4"/>
+      <rect x="26" y="18" width="28" height="24" rx="7" fill="#c93636" stroke="#ff9a76" stroke-width="1.4"/>
+      <path d="M29 25 L37 28 M51 25 L43 28" stroke="#2e0606" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="33" cy="29" r="2.6" fill="#ffe600"/>
+      <circle cx="47" cy="29" r="2.6" fill="#ffe600"/>
+      <polygon points="30,38 33,31 36,38" fill="#fff3d1"/>
+      <polygon points="44,38 47,31 50,38" fill="#fff3d1"/>
+      <path d="M33 38 L47 38" stroke="#3b0808" stroke-width="2.5"/>
+    </g>
+  </svg>`,
+
+  zombie: () => `<svg class="modelo-svg mob-zombie" viewBox="0 0 80 80" aria-hidden="true">
+    <ellipse cx="40" cy="70" rx="21" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-wobble">
+      <rect x="27" y="40" width="26" height="26" rx="5" fill="#465249" stroke="#7d9178" stroke-width="1.2"/>
+      <rect x="14" y="42" width="15" height="7" rx="3" fill="#7d9e6b"/>
+      <rect x="51" y="42" width="15" height="7" rx="3" fill="#7d9e6b"/>
+      <rect x="26" y="18" width="28" height="24" rx="6" fill="#84a870" stroke="#b9d69c" stroke-width="1.4"/>
+      <circle cx="34" cy="29" r="3.4" fill="#1a1f1a"/>
+      <circle cx="46" cy="29" r="3.4" fill="#1a1f1a"/>
+      <circle cx="34" cy="29" r="1.3" fill="#b7ff4a"/>
+      <circle cx="46" cy="29" r="1.3" fill="#b7ff4a"/>
+      <path d="M33 37 L47 37" stroke="#243022" stroke-width="2.5"/>
+      <rect x="36" y="36" width="3" height="3" fill="#e8e2c5"/>
+      <rect x="42" y="36" width="3" height="3" fill="#e8e2c5"/>
+    </g>
+  </svg>`,
+
+  dinosaur: () => `<svg class="modelo-svg mob-dino" viewBox="0 0 80 80" aria-hidden="true">
+    <ellipse cx="40" cy="70" rx="24" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <g class="anim-bob">
+      <path d="M18 58 L30 42 L50 42 L56 66 L26 66 Z" fill="#9c3228" stroke="#ff9675" stroke-width="1.3"/>
+      <rect x="26" y="16" width="32" height="22" rx="6" fill="#bd3f32" stroke="#ff9675" stroke-width="1.4"/>
+      <circle cx="37" cy="24" r="2.8" fill="#ffe600"/>
+      <circle cx="37.5" cy="24" r="1.1" fill="#111"/>
+      <path d="M36 33 L56 33" stroke="#300909" stroke-width="3"/>
+      <path d="M39 33 L41 37 L43 33 M46 33 L48 37 L50 33 M52 33 L54 37 L56 33" fill="#fff"/>
+    </g>
+  </svg>`,
+
+  cosmic: () => `<svg class="modelo-svg mob-cosmic" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <radialGradient id="mob-cos-g" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#c4f5ff"/>
+        <stop offset="55%" stop-color="#6b4cff"/>
+        <stop offset="100%" stop-color="#221459"/>
+      </radialGradient>
+    </defs>
+    <g class="anim-float-ghost">
+      <path d="M22 50 Q16 64 22 70 M32 52 Q30 66 34 72 M48 52 Q50 66 46 72 M58 50 Q64 64 58 70" fill="none" stroke="#80d4ff" stroke-width="4.5" stroke-linecap="round" class="anim-wobble"/>
+      <ellipse cx="40" cy="35" rx="20" ry="18" fill="url(#mob-cos-g)" stroke="#b8f2ff" stroke-width="1.5"/>
+      <circle cx="33" cy="35" r="3.6" fill="#ffe600"/>
+      <circle cx="47" cy="35" r="3.6" fill="#ffe600"/>
+      <circle cx="33" cy="35" r="1.4" fill="#140933"/>
+      <circle cx="47" cy="35" r="1.4" fill="#140933"/>
+      <circle cx="40" cy="23" r="2.2" fill="#00ffc8"/>
+    </g>
+  </svg>`,
+
+  demon: () => `<svg class="modelo-svg mob-demon" viewBox="0 0 80 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="mob-dem-g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ff3b4e"/>
+        <stop offset="100%" stop-color="#590012"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="40" cy="70" rx="24" ry="5" fill="rgba(255,0,40,0.3)"/>
+    <g class="anim-bob">
+      <path d="M26 24 C16 18, 16 8, 24 6 C22 14, 26 18, 32 20 Z" fill="#ffe0a3"/>
+      <path d="M54 24 C64 18, 64 8, 56 6 C58 14, 54 18, 48 20 Z" fill="#ffe0a3"/>
+      <path d="M24 66 L28 42 L52 42 L56 66 Z" fill="#6b0014"/>
+      <ellipse cx="40" cy="32" rx="16" ry="15" fill="url(#mob-dem-g)" stroke="#ff8fa0" stroke-width="1.4"/>
+      <polygon points="31,29 37,32 31,34" fill="#ffe600"/>
+      <polygon points="49,29 43,32 49,34" fill="#ffe600"/>
+      <path d="M33 40 Q40 36 47 40" fill="none" stroke="#240006" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+  </svg>`,
+
+  boss: () => `<svg class="modelo-svg mob-boss" viewBox="0 0 96 96" aria-hidden="true">
+    <defs>
+      <radialGradient id="mob-boss-aura" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(255,40,40,0.45)"/>
+        <stop offset="100%" stop-color="rgba(255,40,40,0)"/>
+      </radialGradient>
+      <linearGradient id="mob-boss-body" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e01b2e"/>
+        <stop offset="60%" stop-color="#7a0016"/>
+        <stop offset="100%" stop-color="#240008"/>
+      </linearGradient>
+    </defs>
+    <circle cx="48" cy="48" r="44" fill="url(#mob-boss-aura)" class="anim-aura"/>
+    <g class="anim-flap-l">
+      <path d="M38 48 L8 22 L14 44 L8 58 L34 56 Z" fill="#4a0010" stroke="#ff5c5c" stroke-width="1.3"/>
+    </g>
+    <g class="anim-flap-r">
+      <path d="M58 48 L88 22 L82 44 L88 58 L62 56 Z" fill="#4a0010" stroke="#ff5c5c" stroke-width="1.3"/>
+    </g>
+    <g class="anim-bob">
+      <path d="M28 82 L32 46 L64 46 L68 82 Z" fill="url(#mob-boss-body)" stroke="#ff7a7a" stroke-width="1.4"/>
+      <polygon points="48,54 54,62 48,70 42,62" fill="#ff7a00" stroke="#ffe66d" stroke-width="1.2"/>
+      <path d="M31 28 C18 20, 18 6, 28 4 C26 14, 30 18, 37 22 Z" fill="#ffe6b3"/>
+      <path d="M65 28 C78 20, 78 6, 68 4 C70 14, 66 18, 59 22 Z" fill="#ffe6b3"/>
+      <polygon points="34,20 39,10 44,18 48,8 52,18 57,10 62,20" fill="#ffd447" stroke="#fff3a0" stroke-width="1"/>
+      <rect x="31" y="20" width="34" height="28" rx="9" fill="url(#mob-boss-body)" stroke="#ff9191" stroke-width="1.5"/>
+      <polygon points="37,31 44,34 37,36" fill="#ffe600"/>
+      <polygon points="59,31 52,34 59,36" fill="#ffe600"/>
+      <path d="M39 42 L42 45 L45 42 L48 45 L51 42 L54 45 L57 42" fill="none" stroke="#ffcf70" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </svg>`
+};
+
+MODELOS_MONSTRO.default = MODELOS_MONSTRO.slime;
+
+function modeloMonstro(tipo) {
+  const fn = MODELOS_MONSTRO[tipo] || MODELOS_MONSTRO.default;
+  return fn();
+}
+
+function bossSvg() { return modeloMonstro('boss'); }
+
+function spriteMonstro(emoji, nome = '') {
+  const tipo = identidadeMonstro(emoji, nome);
+  return modeloMonstro(tipo);
 }
 
 function animarChegadaBoss() {
@@ -275,67 +495,114 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
-/* ---------- herói com equipamentos visíveis ---------- */
+/* ---------- herói cruzado com equipamentos visíveis ---------- */
 function renderHeroi() {
-  const base = modoCapeta ? 'demonio' : 'heroi';
-  const mapa = PIXEL[base].map(linha => linha.split(''));
-  const cores = Object.assign({}, modoCapeta ? CORES_PIXEL.capetaHeroi : CORES_PIXEL.heroi);
+  const cap = modoCapeta;
+  const corCapa = cap ? '#3a064d' : '#8e1121';
+  const corCapaBorda = cap ? '#c95cff' : '#e04858';
+  const corTunica = cap ? '#211033' : '#e6ebf2';
+  const corTunicaSombra = cap ? '#130821' : '#b7c2d1';
+  const corCruz = cap ? '#d938ff' : '#c8192b';
+  const corElmo = cap ? '#5a4e6e' : '#b8c4d4';
+  const corElmoEscuro = cap ? '#2e243d' : '#6c7a8e';
+  const corElmoLuz = cap ? '#a38bc4' : '#eef4fc';
+  const corOlho = equipados.mira ? equipados.mira.cor : (cap ? '#39ff14' : '#7ef9ff');
+  const corLuva = equipados.luva ? equipados.luva.cor : (cap ? '#6a4c93' : '#8f9eb3');
+  const elemLuva = equipados.luva ? ELEMENTOS[equipados.luva.poder || 'fogo'] : null;
 
-  // Mira: olhos brilham na cor da raridade
-  if (equipados.mira) {
-    cores.M = equipados.mira.cor;
-    for (let x = 0; x < mapa[6].length; x++) if (mapa[6][x] === 'e') mapa[6][x] = 'M';
-  }
+  const capa = `<path class="anim-cape" d="M21 34 C10 44, 8 60, 14 71 L58 71 C64 60, 62 44, 51 34 Z" fill="${corCapa}" stroke="${corCapaBorda}" stroke-width="1.2"/>`;
 
-  // Amuleto: pedra no peito na cor da raridade
-  if (equipados.amuleto) {
-    cores.A = equipados.amuleto.cor;
-    for (const y of [10, 11]) { mapa[y][8] = 'A'; mapa[y][9] = 'A'; }
-  }
+  const chifres = cap
+    ? `<path d="M25 18 C17 11, 17 4, 23 2 C23 9, 26 13, 30 15 Z" fill="#e0b3ff" stroke="#4a166e" stroke-width="0.9"/>
+       <path d="M51 18 C59 11, 59 4, 53 2 C53 9, 50 13, 46 15 Z" fill="#e0b3ff" stroke="#4a166e" stroke-width="0.9"/>`
+    : '';
 
-  // Luva: mãos na cor da raridade
-  if (equipados.luva) {
-    cores.L = equipados.luva.cor;
-    const ultima = mapa.length - 1;
-    for (let x = 0; x < mapa[ultima].length; x++) {
-      if (mapa[ultima][x] !== '.') mapa[ultima][x] = 'L';
-    }
-    cores.P = ELEMENTOS[equipados.luva.poder || 'fogo'].cor;
-    mapa[14][4] = 'P';
-    mapa[14][11] = 'P';
-  }
+  const miraSvg = equipados.mira
+    ? `<circle cx="44" cy="24" r="5.2" fill="none" stroke="${equipados.mira.cor}" stroke-width="1.5" opacity="0.95"/>
+       <line x1="44" y1="17" x2="44" y2="20" stroke="${equipados.mira.cor}" stroke-width="1.2"/>
+       <line x1="44" y1="28" x2="44" y2="31" stroke="${equipados.mira.cor}" stroke-width="1.2"/>`
+    : '';
 
-  let ret = '';
-  mapa.forEach((linha, y) => {
-    linha.forEach((chave, x) => {
-      const cor = cores[chave];
-      if (cor) ret += `<rect x="${x}" y="${y}" width="1" height="1" fill="${cor}"/>`;
-    });
-  });
+  const amuletoSvg = equipados.amuleto
+    ? `<polygon points="38,41 42.5,46 38,51 33.5,46" fill="${equipados.amuleto.cor}" stroke="#ffffff" stroke-width="1.1" class="anim-gem"/>`
+    : '';
 
-  // Talismã: trevo na mão esquerda, na cor da raridade
-  if (equipados.talisma) {
-    const cor = equipados.talisma.cor;
-    for (const [x, y] of [[1,10],[2,10],[3,10],[2,9],[0,11],[2,11],[4,11],[2,12]]) {
-      ret += `<rect x="${x}" y="${y}" width="1" height="1" fill="${cor}"/>`;
-    }
-  }
+  const talismaSvg = equipados.talisma
+    ? `<g class="anim-orbit" transform="translate(13,44)">
+         <circle cx="0" cy="-3" r="3" fill="${equipados.talisma.cor}"/>
+         <circle cx="-3" cy="1" r="3" fill="${equipados.talisma.cor}"/>
+         <circle cx="3" cy="1" r="3" fill="${equipados.talisma.cor}"/>
+         <circle cx="0" cy="0" r="1.5" fill="#fff"/>
+       </g>`
+    : '';
 
-  // Lâmina: adaga na mão direita, com guarda na cor da raridade
-  if (equipados.arma) {
-    const guarda = equipados.arma.cor;
-    const pontosDaAdaga = [
-      [14, 7, '#ffffff'], [13, 8, '#ffffff'], [14, 8, '#b9d4ff'],
-      [13, 9, '#ffffff'], [14, 9, '#b9d4ff'], [12, 10, '#ffffff'],
-      [13, 10, '#b9d4ff'], [12, 11, guarda], [13, 11, guarda],
-      [13, 12, '#7a3b1a'], [13, 13, '#7a3b1a']
-    ];
-    for (const [x, y, cor] of pontosDaAdaga) {
-      ret += `<rect x="${x}" y="${y}" width="1" height="1" fill="${cor}"/>`;
-    }
-  }
+  const armaSvg = equipados.arma
+    ? `<g class="anim-weapon" transform="translate(52,32) rotate(-18)">
+         <circle cx="5" cy="27" r="2.2" fill="${equipados.arma.cor}" stroke="#241108" stroke-width="0.8"/>
+         <rect x="3.5" y="18" width="3" height="8" rx="1" fill="#592811"/>
+         <rect x="-2" y="16" width="14" height="3.2" rx="1.4" fill="${equipados.arma.cor}" stroke="#241108" stroke-width="0.6"/>
+         <polygon points="5,-6 8.5,16 1.5,16" fill="#e6f2ff" stroke="#ffffff" stroke-width="0.7"/>
+         <line x1="5" y1="-2" x2="5" y2="14" stroke="#90b4d8" stroke-width="1"/>
+       </g>`
+    : '';
 
-  heroi.innerHTML = `<svg class="pixel" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${ret}</svg>`;
+  const auraLuva = elemLuva
+    ? `<circle cx="22" cy="54" r="5.5" fill="${elemLuva.cor}" opacity="0.55" class="anim-gem"/>
+       <circle cx="54" cy="54" r="5.5" fill="${elemLuva.cor}" opacity="0.55" class="anim-gem"/>`
+    : '';
+
+  heroi.innerHTML = `<svg class="modelo-svg modelo-heroi" viewBox="0 0 76 76" aria-hidden="true">
+    <defs>
+      <linearGradient id="hero-helm-g" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="${corElmoEscuro}"/>
+        <stop offset="45%" stop-color="${corElmoLuz}"/>
+        <stop offset="100%" stop-color="${corElmo}"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="38" cy="71" rx="21" ry="4" fill="rgba(0,0,0,0.48)"/>
+    ${capa}
+    <g class="anim-bob">
+      ${chifres}
+      <!-- ombreiras de aço -->
+      <ellipse cx="23" cy="40" rx="6.5" ry="5" fill="${corElmo}" stroke="${corElmoLuz}" stroke-width="1.1"/>
+      <ellipse cx="53" cy="40" rx="6.5" ry="5" fill="${corElmo}" stroke="${corElmoLuz}" stroke-width="1.1"/>
+      <!-- túnica / tabardo templário -->
+      <path d="M24 37 L52 37 L55 66 L21 66 Z" fill="${corTunica}" stroke="${corTunicaSombra}" stroke-width="1.3"/>
+      <path d="M38 37 L52 37 L55 66 L38 66 Z" fill="${corTunicaSombra}" opacity="0.28"/>
+      <!-- cruz templária no peito -->
+      <rect x="35.8" y="39" width="4.4" height="17" rx="0.8" fill="${corCruz}"/>
+      <rect x="30.5" y="44" width="15" height="4.4" rx="0.8" fill="${corCruz}"/>
+      <!-- cinto e fivela dourada -->
+      <rect x="22" y="57" width="32" height="4" rx="1.5" fill="#4a2511"/>
+      <rect x="35" y="56.4" width="6" height="5.2" rx="1" fill="#ffd447" stroke="#7a5200" stroke-width="0.8"/>
+      ${amuletoSvg}
+      <!-- escudo cruzado no braço esquerdo -->
+      <path d="M13 41 L25 41 L25 53 C25 59, 19 63, 19 63 C19 63, 13 59, 13 53 Z" fill="${corTunica}" stroke="${corElmoLuz}" stroke-width="1.4"/>
+      <rect x="17.8" y="43.5" width="2.4" height="15" fill="${corCruz}"/>
+      <rect x="14.5" y="48.5" width="9" height="2.4" fill="${corCruz}"/>
+      <!-- elmo grande (Great Helm) -->
+      <path d="M26 16 C26 11, 50 11, 50 16 L51 35 C51 37, 25 37, 25 35 Z" fill="url(#hero-helm-g)" stroke="${corElmoEscuro}" stroke-width="1.3"/>
+      <!-- fenda do visor + olhos -->
+      <rect x="27.5" y="21.5" width="21" height="4.8" rx="1.6" fill="#0d0914"/>
+      <ellipse cx="32.5" cy="23.9" rx="2.3" ry="1.6" fill="${corOlho}"/>
+      <ellipse cx="43.5" cy="23.9" rx="2.3" ry="1.6" fill="${corOlho}"/>
+      <!-- reforço em cruz dourada no elmo -->
+      <rect x="36.5" y="13.5" width="3" height="22" rx="1" fill="#ffd447" opacity="0.92"/>
+      <rect x="27" y="22.8" width="22" height="2.2" rx="1" fill="#ffd447" opacity="0.88"/>
+      <!-- respiradouros do elmo -->
+      <circle cx="31" cy="30" r="1" fill="#222a36"/>
+      <circle cx="34" cy="30" r="1" fill="#222a36"/>
+      <circle cx="42" cy="30" r="1" fill="#222a36"/>
+      <circle cx="45" cy="30" r="1" fill="#222a36"/>
+      ${miraSvg}
+      ${auraLuva}
+      <!-- manoplas -->
+      <rect x="17.5" y="50" width="9" height="8" rx="3" fill="${corLuva}" stroke="#ffffff" stroke-width="0.9"/>
+      <rect x="49.5" y="50" width="9" height="8" rx="3" fill="${corLuva}" stroke="#ffffff" stroke-width="0.9"/>
+      ${talismaSvg}
+      ${armaSvg}
+    </g>
+  </svg>`;
 }
 
 /* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
@@ -558,8 +825,21 @@ function animarConfete(agora = performance.now()) {
 }
 requestAnimationFrame(animarConfete);
 
+let _arenaRectCache = null;
+let _arenaRectExp = 0;
+function getArenaRect() {
+  const agora = performance.now();
+  if (!_arenaRectCache || agora > _arenaRectExp) {
+    _arenaRectCache = arena.getBoundingClientRect();
+    _arenaRectExp = agora + 220;
+  }
+  return _arenaRectCache;
+}
+addEventListener('resize', () => { _arenaRectCache = null; });
+
 function flutuante(texto, cor, deslocamento = 0) {
-  const r = arena.getBoundingClientRect();
+  while (floaters.childElementCount >= 8) floaters.firstElementChild.remove();
+  const r = getArenaRect();
   const d = document.createElement('div');
   d.className = 'flutuante';
   d.textContent = texto;
@@ -569,7 +849,7 @@ function flutuante(texto, cor, deslocamento = 0) {
   d.style.left = (r.left + r.width / 2 + deslocamento + spread) + 'px';
   d.style.top = (r.top + r.height * .46 + vertical) + 'px';
   floaters.appendChild(d);
-  setTimeout(() => d.remove(), 1000);
+  setTimeout(() => d.remove(), 900);
 }
 
 function mostrarMensagem(texto) {
@@ -589,9 +869,21 @@ function piscar() {
 }
 
 function animarMonstro(tipo) {
-  monstroEl.classList.remove('acerto', 'erro');
-  void monstroEl.offsetWidth;
-  monstroEl.classList.add(tipo);
+  if (tipo === 'acerto') {
+    monstroEl.animate([
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.16, .88) translateX(8px) rotate(5deg)', offset: 0.35 },
+      { transform: 'scale(.95, 1.06) translateX(-3px) rotate(-2deg)', offset: 0.7 },
+      { transform: 'scale(1)' }
+    ], { duration: 240, easing: 'ease-out' });
+  } else {
+    monstroEl.animate([
+      { transform: 'translateX(0)', opacity: 1 },
+      { transform: 'translateX(16px) skewX(-5deg)', opacity: 0.72, offset: 0.3 },
+      { transform: 'translateX(-8px) skewX(3deg)', opacity: 0.88, offset: 0.65 },
+      { transform: 'translateX(0)', opacity: 1 }
+    ], { duration: 260, easing: 'ease-out' });
+  }
 }
 
 /* ---------- preset v2.0: feedback visual, combos, conquistas e painéis ---------- */
@@ -1092,7 +1384,11 @@ function atualizarMonstro(comAnimacao = false) {
     const [emoji, nome] = MONSTROS[indice];
     const sprite = modoCapeta ? '😈' : emoji;
     monstroEl.dataset.monster = modoCapeta ? 'demon' : identidadeMonstro(emoji, nome);
-    monstroEl.innerHTML = spriteMonstro(sprite);
+    monstroEl.innerHTML = spriteMonstro(sprite, nome);
+    monstroEl.classList.remove('nascendo');
+    void monstroEl.offsetWidth;
+    monstroEl.classList.add('nascendo');
+    setTimeout(() => monstroEl.classList.remove('nascendo'), 450);
     nomeMonstroEl.textContent = modoCapeta
       ? `Lúcifer ${mobNivel}`
       : (ciclo > 0 ? `${nome} +${ciclo}` : nome);
@@ -1173,7 +1469,7 @@ function atualizarCompras() {
   if (magiaUpgradeBtn) magiaUpgradeBtn.disabled = provacaoAtiva || moedas < custoMagia();
 }
 
-function renderHUD() {
+function renderHUD(comRota = true) {
   pontosEl.textContent = pontos;
   animarNumero(moedasEl, moedas);
   animarNumero(saldoLojaEl, moedas);
@@ -1195,11 +1491,11 @@ function renderHUD() {
   if (el('monstrosMortos')) el('monstrosMortos').textContent = estatisticas.mortes;
   if (el('bossesMortos')) el('bossesMortos').textContent = estatisticas.bosses;
   if (el('recordeCombo')) el('recordeCombo').textContent = comboMax;
-  renderRota();
+  if (comRota) renderRota();
   infoMonstroEl.textContent = demonioProva
     ? `DESAFIO · Boss Demônio · ${hpMax} de vida`
     : `${bossAtivo ? 'BOSS' : 'Monstro'} nível ${mobNivel} · ${hpMax} de vida · ${Math.round(100 - acerto)}% de erro`;
-  atualizarCompras();
+  if (comRota) atualizarCompras();
 }
 
 function itemHtml(item, acao, extra = '') {
@@ -1374,43 +1670,76 @@ function verificarFusao() {
   renderTudo();
 }
 
-function lancarAdaga(resultado) {
-  const a = arena.getBoundingClientRect();
-  const h = heroi.getBoundingClientRect();
-  const m = monstroEl.getBoundingClientRect();
+const _adagaSvgCache = new Map();
+function adagaSvgCached(corGuarda, corElem) {
+  const key = corGuarda + '|' + corElem;
+  let svg = _adagaSvgCache.get(key);
+  if (!svg) {
+    svg = adagaSvg(corGuarda, corElem);
+    _adagaSvgCache.set(key, svg);
+  }
+  return svg;
+}
 
-  const x0 = h.left - a.left + h.width * .68;
-  const y0 = h.top - a.top + h.height * .38;
-  const alvoX = m.left - a.left + m.width * .45;
-  const alvoY = m.top - a.top + m.height * .48;
-  const dx = alvoX - x0;
-  const dy = alvoY - y0;
+let _posCombate = null;
+let _posCombateExp = 0;
+function getPosCombate() {
+  const agora = performance.now();
+  if (!_posCombate || agora > _posCombateExp) {
+    const a = getArenaRect();
+    const h = heroi.getBoundingClientRect();
+    const m = monstroEl.getBoundingClientRect();
+    const x0 = h.left - a.left + h.width * .68;
+    const y0 = h.top - a.top + h.height * .38;
+    const alvoX = m.left - a.left + m.width * .45;
+    const alvoY = m.top - a.top + m.height * .48;
+    _posCombate = { x0, y0, alvoX, alvoY, dx: alvoX - x0, dy: alvoY - y0 };
+    _posCombateExp = agora + 250;
+  }
+  return _posCombate;
+}
+addEventListener('resize', () => { _posCombate = null; });
+
+let _adagasEmVoo = 0;
+function lancarAdaga(resultado) {
+  const { x0, y0, alvoX, alvoY, dx, dy } = getPosCombate();
   const erro = !resultado.acerto;
 
+  if (_adagasEmVoo >= 8) {
+    setTimeout(() => { if (!resetando) aplicarImpacto(resultado, alvoX, alvoY); }, 120);
+    return;
+  }
+
+  _adagasEmVoo++;
   const adaga = document.createElement('div');
-  adaga.className = 'adaga';
-  adaga.innerHTML = pixelSvg('adaga');
+  adaga.className = 'adaga' + (resultado.crit ? ' critico' : '');
+  const corGuarda = equipados.arma ? equipados.arma.cor : '#ffd447';
+  const corElem = equipados.luva ? ELEMENTOS[equipados.luva.poder || 'fogo'].cor : '';
+  adaga.innerHTML = adagaSvgCached(corGuarda, corElem);
   adaga.style.left = x0 + 'px';
   adaga.style.top = y0 + 'px';
+  if (corElem) adaga.style.setProperty('--elem-adaga', corElem);
   arena.appendChild(adaga);
 
   const voo = adaga.animate([
-    { transform: 'translate(0px,0px) rotate(-50deg) scale(.8)', opacity: 0 },
-    { transform: `translate(${dx * .5}px, ${dy * .5 - 44}px) rotate(-95deg) scale(1.1)`, opacity: 1, offset: .55 },
-    { transform: `translate(${erro ? dx + 80 : dx}px, ${erro ? dy - 100 : dy}px) rotate(-155deg) scale(${erro ? .8 : 1})`, opacity: erro ? 0 : 1 }
-  ], { duration: 300, easing: 'ease-in', fill: 'forwards' });
+    { transform: 'translate(0px,0px) rotate(-35deg) scale(.75)', opacity: 0.2 },
+    { transform: `translate(${dx * .48}px, ${dy * .48 - 52}px) rotate(125deg) scale(${resultado.crit ? 1.35 : 1.15})`, opacity: 1, offset: .5 },
+    { transform: `translate(${erro ? dx + 85 : dx}px, ${erro ? dy - 105 : dy}px) rotate(315deg) scale(${erro ? .75 : 1.05})`, opacity: erro ? 0 : 1 }
+  ], { duration: 260, easing: 'cubic-bezier(.22,.78,.42,1)', fill: 'forwards' });
 
   let resolvido = false;
   const finalizar = () => {
     if (resolvido) return;
     resolvido = true;
+    _adagasEmVoo = Math.max(0, _adagasEmVoo - 1);
     adaga.remove();
     if (!resetando) aplicarImpacto(resultado, alvoX, alvoY);
   };
   voo.onfinish = finalizar;
-  setTimeout(finalizar, 340); // garante o impacto mesmo se o navegador atrasar os frames
+  setTimeout(finalizar, 300); // garante o impacto mesmo se o navegador atrasar os frames
 }
 
+let _impactosAtivos = 0;
 function aplicarImpacto(resultado, x, y) {
   if (lutaPausada) return;
   if (!resultado.acerto) {
@@ -1419,7 +1748,6 @@ function aplicarImpacto(resultado, x, y) {
     tocarSom('miss');
     estatisticas.erros++;
     atualizarCombo(false);
-    renderConquistas();
     return;
   }
   estatisticas.acertos++;
@@ -1428,12 +1756,27 @@ function aplicarImpacto(resultado, x, y) {
   if (combo % 10 === 0) verificarConquistas();
   tocarSom(resultado.crit ? 'critico' : 'acerto');
 
-  const impacto = document.createElement('div');
-  impacto.className = 'impacto';
-  impacto.style.left = x + 'px';
-  impacto.style.top = y + 'px';
-  arena.appendChild(impacto);
-  setTimeout(() => impacto.remove(), 500);
+  if (_impactosAtivos < 5) {
+    _impactosAtivos++;
+    const impacto = document.createElement('div');
+    impacto.className = 'impacto' + (resultado.crit ? ' critico' : '');
+    impacto.style.left = x + 'px';
+    impacto.style.top = y + 'px';
+    arena.appendChild(impacto);
+    setTimeout(() => {
+      _impactosAtivos = Math.max(0, _impactosAtivos - 1);
+      impacto.remove();
+    }, 480);
+  }
+
+  if (resultado.crit) {
+    arena.animate([
+      { transform: 'translate(0, 0)' },
+      { transform: 'translate(-4px, 3px)', offset: 0.25 },
+      { transform: 'translate(4px, -3px)', offset: 0.55 },
+      { transform: 'translate(0, 0)' }
+    ], { duration: 240, easing: 'ease-out' });
+  }
 
   const { crit, ganho } = resultado;
   const antes = Math.floor(pontos / 10);
@@ -1443,14 +1786,16 @@ function aplicarImpacto(resultado, x, y) {
 
   animarMonstro('acerto');
   flutuante(crit ? `CRÍTICO +${ganho}!` : `+${ganho}`, crit ? '#e0bb74' : '#ffffff');
-  estourarConfete(crit ? 16 : 5);
-  pontosEl.classList.remove('pulo');
-  void pontosEl.offsetWidth;
-  pontosEl.classList.add('pulo');
+  estourarConfete(crit ? 14 : 4);
+  pontosEl.animate([
+    { transform: 'scale(1)' },
+    { transform: 'scale(1.18)', offset: 0.45 },
+    { transform: 'scale(1)' }
+  ], { duration: 180, easing: 'ease-out' });
 
   hpBar.style.width = (hp / hpMax * 100) + '%';
   hpText.textContent = `${hp} / ${hpMax}`;
-  aplicarTema();
+  if (depois !== antes) aplicarTema();
 
   if (depois > antes && pontos < 100) {
     piscar();
@@ -1459,39 +1804,45 @@ function aplicarImpacto(resultado, x, y) {
     tocarSom('nivel');
   }
 
-  if (hp <= 0) matarMonstro(crit ? 2 : 0);
+  if (hp <= 0) {
+    _posCombate = null;
+    matarMonstro(crit ? 2 : 0);
+  }
 
   if (pontos >= 100) {
     if (provacaoAtiva) {
       pontos = 100;
       if (!demonioProva) { resetarPontos(); return; }
-      renderHUD();
+      renderHUD(true);
       renderBuild();
       return;
     }
     resetarPontos();
     return;
   }
-  renderHUD();
-  renderBuild();
+  renderHUD(false);
 }
 
 function atacar() {
   if (!jogoIniciado || resetando || lutaPausada) return;
   estatisticas.cliques++;
 
-  botao.classList.remove('clicando');
-  void botao.offsetWidth;
-  botao.classList.add('clicando');
-  setTimeout(() => botao.classList.remove('clicando'), 240);
+  botao.animate([
+    { transform: 'scale(1)' },
+    { transform: 'scale(.91)', offset: 0.35 },
+    { transform: 'scale(1.03)', offset: 0.7 },
+    { transform: 'scale(1)' }
+  ], { duration: 160, easing: 'ease-out' });
 
   const acerto = Math.random() * 100 < taxaAcerto();
   const crit = acerto && Math.random() * 100 < taxaCrit();
 
-  heroi.classList.remove('atirando');
-  void heroi.offsetWidth;
-  heroi.classList.add('atirando');
-  setTimeout(() => heroi.classList.remove('atirando'), 330);
+  heroi.animate([
+    { transform: 'translateX(0) rotate(0)' },
+    { transform: 'translateX(-10px) rotate(-10deg)', offset: 0.3 },
+    { transform: 'translateX(10px) rotate(10deg)', offset: 0.65 },
+    { transform: 'translateX(0) rotate(0)' }
+  ], { duration: 220, easing: 'ease-out' });
 
   lancarAdaga({ acerto, crit, ganho: crit ? 2 : 1 });
   tocarSom('lancar');
