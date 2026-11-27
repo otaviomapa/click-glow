@@ -34,12 +34,15 @@ chefes Baphomet, Lilith e Lúcifer.
 - **Herói normal:** cruzado (`personagens/heroi-cruzado.webp`).
 - **Fase secreta 666:** após a bênção, o herói usa o visual de build do
   **antimodelo 666** (`personagens/anti_builds/`).
-- Há **9 variações conceituais por personagem** (`personagens/hero_builds/` e
-  `personagens/anti_builds/`). O jogo escolhe automaticamente uma conforme a
-  combinação de raridades, peças equipadas e elemento da luva; mudanças de build
-  atualizam o sprite. A mesma variação pode aparecer em builds diferentes porque
-  o pacote só traz nove previews por personagem.
+- Há **9 variações nomeadas por personagem** (`personagens/hero_builds/` e
+  `personagens/anti_builds/`): `base`, `lamina`, `mira`, `amuleto`, `fogo`,
+  `gelo`, `raio`, `talisma` e `radiante`. O visual segue a peça mais forte
+  equipada; luva elemental escolhe `fogo`/`gelo`/`raio` e qualquer radiante
+  impõe o visual `radiante`.
+- ícones vêm do pack Crusader: 7 categorias × 5 raridades × 2 formas em
+  `icones/hero/` e `icones/antimodel/`; a luva troca de ícone com o elemento.
 - Os previews são concept art recortada, ainda não sprites modulares/animados.
+  As folhas de conceito do pacote ficam só como referência, não entram no jogo.
 - Os inimigos são espelhados (`scaleX(-1)`) para encarar o herói à esquerda.
 
 ## Lista completa de itens

@@ -512,7 +512,7 @@ body.modo-capeta .nome-monstro.chefe { color: #ff6b6b; }
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6));
 }
 .heroi[data-heroi="antimodelo"] .heroi-img { filter: drop-shadow(0 0 22px rgba(217, 56, 255, .75)); }
-.heroi[data-build="1"] .heroi-img { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c3) 70%, transparent)); }
+.heroi[data-build="base"] .heroi-img { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c3) 70%, transparent)); }
 .heroi.atirando { animation: arremessar .32s cubic-bezier(.22,1.35,.4,1); }
 @keyframes arremessar {
   0%   { transform: translateX(0) rotate(0) scale(1); }

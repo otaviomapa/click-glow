@@ -12,11 +12,11 @@ const RARIDADES = [
 ];
 
 const TIPOS = [
-  { slot: 'arma',    nome: 'Lâmina',  emoji: '🗡️', icone: 'plain-dagger.svg',   stat: 'crit',   base: 3 },
-  { slot: 'mira',    nome: 'Mira',    emoji: '🎯', icone: 'archery-target.svg', stat: 'acerto', base: 3 },
-  { slot: 'amuleto', nome: 'Amuleto', emoji: '📿', icone: 'gold-scarab.svg',    stat: 'crit',   base: 2 },
-  { slot: 'luva',    nome: 'Luva',    emoji: '🧤', icone: 'gauntlet.svg', stat: 'acerto', base: 2 },
-  { slot: 'talisma', nome: 'Talismã', emoji: '🍀', icone: 'clover.svg',  stat: 'sorte',  base: 3 }
+  { slot: 'arma',    nome: 'Lâmina',  emoji: '🗡️', icone: 'lamina',  stat: 'crit',   base: 3 },
+  { slot: 'mira',    nome: 'Mira',    emoji: '🎯', icone: 'mira',    stat: 'acerto', base: 3 },
+  { slot: 'amuleto', nome: 'Amuleto', emoji: '📿', icone: 'amuleto', stat: 'crit',   base: 2 },
+  { slot: 'luva',    nome: 'Luva',    emoji: '🧤', icone: 'luva',    stat: 'acerto', base: 2 },
+  { slot: 'talisma', nome: 'Talismã', emoji: '🍀', icone: 'talisma', stat: 'sorte',  base: 3 }
 ];
 
 const PODERES_LUVA = [
@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '34';
+const ASSETS_V = '35';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -550,25 +550,37 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
+// o pack nomeia cada preview pela peça que ele representa
 const BUILDS_HEROI = {
-  heroi: Object.freeze(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [i + 1, `hero_builds/build_${i + 1}.webp`]))),
-  antimodelo: Object.freeze(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [i + 1, `anti_builds/build_${i + 1}.webp`])))
+  heroi: Object.freeze({
+    base: 'hero_builds/base.webp', lamina: 'hero_builds/lamina.webp',
+    mira: 'hero_builds/mira.webp', amuleto: 'hero_builds/amuleto.webp',
+    fogo: 'hero_builds/fogo.webp', gelo: 'hero_builds/gelo.webp',
+    raio: 'hero_builds/raio.webp', talisma: 'hero_builds/talisma.webp',
+    radiante: 'hero_builds/radiante.webp'
+  }),
+  antimodelo: Object.freeze({
+    base: 'anti_builds/base.webp', lamina: 'anti_builds/lamina.webp',
+    mira: 'anti_builds/mira.webp', amuleto: 'anti_builds/amuleto.webp',
+    fogo: 'anti_builds/fogo.webp', gelo: 'anti_builds/gelo.webp',
+    raio: 'anti_builds/raio.webp', talisma: 'anti_builds/talisma.webp',
+    radiante: 'anti_builds/radiante.webp'
+  })
 };
 
-// cada slot/raridade/elemento soma um peso fixo: equipar ou trocar um item
-// sempre muda de retrato, sem depender de OR mascarado que pode colidir
-const INDICE_SLOT = { arma: 0, mira: 1, amuleto: 2, luva: 3, talisma: 4 };
-const INDICE_RAR = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
-const INDICE_ELEMENTO = { fogo: 1, gelo: 2, raio: 3 };
+const ORDEM_RAR = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
+const BUILD_POR_SLOT = { arma: 'lamina', mira: 'mira', amuleto: 'amuleto', talisma: 'talisma' };
 
+// a peça mais forte manda no visual; luva elemental escolhe fogo/gelo/raio
 function buildVisualAtual() {
   const itens = Object.values(equipados).filter(Boolean);
-  if (!itens.length) return 1;
-  const peso = itens.reduce((total, item) => total
-    + (INDICE_SLOT[item.slot] ?? 0) + 1
-    + (INDICE_RAR[item.rar] ?? 0)
-    + (item.poder ? (INDICE_ELEMENTO[item.poder] ?? 0) : 0), 0);
-  return 1 + (peso % 9);
+  if (!itens.length) return 'base';
+  if (itens.some(i => i.rar === 'radiante')) return 'radiante';
+  const maior = Math.max(...itens.map(i => ORDEM_RAR[i.rar] ?? 0));
+  const candidatos = itens.filter(i => (ORDEM_RAR[i.rar] ?? 0) === maior);
+  const melhor = candidatos.find(i => i.slot === buildFoco) || candidatos[0];
+  if (melhor.slot === 'luva') return melhor.poder || 'fogo';
+  return BUILD_POR_SLOT[melhor.slot] || 'base';
 }
 
 function renderHeroi() {
@@ -582,9 +594,13 @@ function renderHeroi() {
   heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}?v=${ASSETS_V}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
 }
 
-/* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
+/* ---------- ícones do pack Crusader (SVG por forma, slot e raridade) ---------- */
 function ico(item) {
-  return `<img class="ico" src="icones/${item.rar}-${item.icone}" alt="${item.emoji}">`;
+  const familia = modoCapeta ? 'antimodel' : 'hero';
+  const nome = item.slot === 'luva'
+    ? `luva_${item.poder || 'fogo'}`
+    : ({ arma: 'lamina', mira: 'mira', amuleto: 'amuleto', talisma: 'talisma' }[item.slot] || 'lamina');
+  return `<img class="ico" src="icones/${familia}/${item.rar}-${nome}.svg?v=${ASSETS_V}" alt="${item.emoji}">`;
 }
 
 /* ---------- sons sintetizados (sem arquivos externos) ---------- */
@@ -698,6 +714,7 @@ let sequencia = '';
 let idItem = 1;
 let inventario = [];
 let equipados = {};
+let buildFoco = null; // último slot equipado desempata builds de mesma raridade
 let loja = [];
 // menor raridade que pode aparecer na loja por peça (comprar uma raridade aposenta as menores)
 let raridadeMinima = Object.fromEntries(TIPOS.map(t => [t.slot, 0]));
@@ -1618,6 +1635,7 @@ function comprar(id) {
   inventario.push(item);
   const atual = equipados[item.slot];
   if (!atual || item.bonus > atual.bonus) equipados[item.slot] = item;
+  buildFoco = item.slot;
   loja[indice] = null;
   registrarRaridade(item);
   limparLojaAbaixo(item.slot);
@@ -1635,6 +1653,7 @@ function equipar(id) {
   const item = inventario.find(i => i.id === id);
   if (!item) return;
   equipados[item.slot] = item;
+  buildFoco = item.slot;
   flutuante('EQUIPADO!', item.cor, -90);
   sincronizarMagia();
   verificarFusao();
@@ -2355,6 +2374,7 @@ function iniciarJogo() {
   }
 
   provacaoAtiva = true;
+  buildFoco = null;
   demonioProva = false;
   provaConcluida = false;
   bencaoConcedida = false;
@@ -2608,6 +2628,7 @@ function carregarJogo() {
     idItem = Number(d.idItem) || 1;
     inventario = Array.isArray(d.inventario) ? d.inventario : [];
     equipados = d.equipados && typeof d.equipados === 'object' ? d.equipados : {};
+    buildFoco = null;
     loja = Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()];
     if (d.raridadeMinima && typeof d.raridadeMinima === 'object') raridadeMinima = d.raridadeMinima;
     comboMax = Number(d.comboMax) || 0;
