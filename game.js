@@ -2528,7 +2528,11 @@ function atualizarTituloAba() {
   document.title = `⚔️ ${formatarCompacto(moedas)} 🪙 · R${rodada} — Click Glow`;
 }
 
+let _resetandoSave = false;
 function salvarJogo() {
+  // antes de COMEÇAR JORNADA não existe progresso a guardar — um save vazio
+  // faria o menu reabrir em "CONTINUAR" e pular a provação inicial
+  if (_resetandoSave || !jogoIniciado) return;
   try {
     const dados = {
       pontos, rodada, moedas, rolls, mobNivel, hp, hpMax, bossAtivo,
@@ -2614,11 +2618,6 @@ function resetarSave() {
   _resetandoSave = true;
   location.reload();
 }
-
-let _resetandoSave = false;
-function salvarJogo() {
-  if (_resetandoSave) return;
-  try {
 
 document.addEventListener('visibilitychange', () => {
   document.body.classList.toggle('pausado', document.hidden);
