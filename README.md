@@ -18,4 +18,12 @@ Jogo de clique com desafio inicial, bênção elemental, loja, raridades e bosse
 - `index.html` — estrutura da página
 - `style.css` — visual
 - `game.js` — toda a lógica
+- `monstros/anim/` — spritesheets animados (idle, hit e morte) dos 18 inimigos
 - `icones/` — sprites SVG dos itens
+
+## Bestiário animado
+
+Os inimigos usam spritesheets WebP com 8 colunas x 6 linhas (idle, movimento,
+ataque, hit, morte e especial). O jogo toca **idle** em loop, **hit** ao acertar
+e **morte** no Boss Demônio do desafio inicial. São 18 criaturas, incluindo os
+chefes Baphomet, Lilith e Lúcifer.

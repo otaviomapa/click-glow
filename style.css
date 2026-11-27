@@ -219,6 +219,40 @@ body {
   pointer-events: none; user-select: none;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .65));
 }
+
+/* spritesheets animados: 8 colunas x 6 linhas (idle, move, attack, hit, death, special) */
+.monstro .modelo-anim {
+  position: relative; z-index: 2;
+  width: 100%; height: 100%;
+  background-repeat: no-repeat;
+  background-position: 0% 0%;
+  background-size: 800% 600%;
+  pointer-events: none; user-select: none;
+  image-rendering: auto;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .65));
+  animation: mobIdle .89s steps(7) infinite;
+}
+.monstro.chefe .modelo-anim { width: 104%; height: 104%; }
+@keyframes mobIdle {
+  from { background-position: 0% 0%; }
+  to   { background-position: 100% 0%; }
+}
+/* linha 3 = hit (15 fps) */
+.monstro .modelo-anim.levando {
+  animation: mobHit .53s steps(7) 1 both;
+}
+@keyframes mobHit {
+  from { background-position: 0% 60%; }
+  to   { background-position: 100% 60%; }
+}
+/* linha 4 = death (9 fps); segura o ultimo quadro */
+.monstro .modelo-anim.morrendo {
+  animation: mobDeath .89s steps(7) 1 both;
+}
+@keyframes mobDeath {
+  from { background-position: 0% 80%; }
+  to   { background-position: 100% 80%; }
+}
 .monstro[data-monster="dragon"], .monstro[data-monster="demon"], .monstro[data-monster="boss"], .monstro[data-monster="ogre"], .monstro[data-monster="dinosaur"] { --c1: #db5649; --c2: #6c1829; --c3: #ffd477; }
 .monstro[data-monster="slime"] { --c1: #69b887; --c2: #2b6b55; --c3: #c3f1ae; }
 .monstro[data-monster="bat"] { --c1: #817891; --c2: #292d3e; --c3: #bdabbf; }

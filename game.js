@@ -26,41 +26,44 @@ const PODERES_LUVA = [
 ];
 
 const MONSTROS = [
-  ['🕯️', 'Cultista'],          ['⛪', 'Freira Possuída'],   ['😈', 'Imp'],
-  ['👁️', 'Olho do Caos'],      ['🧟', 'Cadáver Vivente'],   ['🎭', 'Inquisidor'],
-  ['🐺', 'Cão Infernal'],      ['💀', 'Alma Penada'],       ['🦇', 'Gárgula Demoníaca'],
-  ['🐙', 'Aberração'],         ['⚔️', 'Lúcifer'],           ['✝️', 'Papa Sombrio'],
-  ['🐍', 'Serpente do Éden'],  ['🌙', 'Lilith'],            ['🐐', 'Baphomet']
+  ['🕯️', 'Cultista'],          ['⛪', 'Freira Corrompida'], ['😈', 'Imp'],
+  ['👁️', 'Olho do Abismo'],    ['💀', 'Esqueleto Sagrado'], ['🎭', 'Inquisidor'],
+  ['🐺', 'Cão do Inferno'],    ['👻', 'Alma Atormentada'],  ['🦇', 'Gárgula'],
+  ['🧙', 'Zelota do Oculto'],  ['⚔️', 'Cavaleiro Possuído'], ['🪽', 'Anjo Caído'],
+  ['💋', 'Succubus'],          ['✨', 'Espectro Sacro'],    ['🐙', 'Demônio Abissal'],
+  ['😈', 'Lúcifer'],           ['🌙', 'Lilith'],            ['🐐', 'Baphomet']
 ];
 
 const SPRITES_ARQUIVO = {
-  'Cultista': 'cultista.png',
-  'Freira Possuída': 'freira-possuida.png',
-  'Imp': 'imp.png',
-  'Olho do Caos': 'olho-do-caos.png',
-  'Cadáver Vivente': 'cadaver-vivente.png',
-  'Inquisidor': 'inquisidor.png',
-  'Cão Infernal': 'cao-infernal.png',
-  'Alma Penada': 'alma-penada.png',
-  'Gárgula Demoníaca': 'gargula-demoniaca.png',
-  'Aberração': 'aberracao.png',
-  'Lúcifer': 'lucifer.png',
-  'Papa Sombrio': 'papa-sombrio.png',
-  'Serpente do Éden': 'serpente-do-eden.png',
-  'Lilith': 'lilith.png',
-  'Baphomet': 'baphomet.png'
+  'Cultista': 'cultista.webp',
+  'Freira Corrompida': 'freira-corrompida.webp',
+  'Imp': 'imp.webp',
+  'Olho do Abismo': 'olho-do-abismo.webp',
+  'Esqueleto Sagrado': 'esqueleto-sagrado.webp',
+  'Inquisidor': 'inquisidor.webp',
+  'Cão do Inferno': 'cao-do-inferno.webp',
+  'Alma Atormentada': 'alma-atormentada.webp',
+  'Gárgula': 'gargula.webp',
+  'Zelota do Oculto': 'zelota-do-oculto.webp',
+  'Cavaleiro Possuído': 'cavaleiro-possuido.webp',
+  'Anjo Caído': 'anjo-caido.webp',
+  'Succubus': 'succubus.webp',
+  'Espectro Sacro': 'espectro-sacro.webp',
+  'Demônio Abissal': 'demonio-abissal.webp',
+  'Lúcifer': 'lucifer.webp',
+  'Lilith': 'lilith.webp',
+  'Baphomet': 'baphomet.webp'
 };
 
 function identidadeMonstro(emoji, nome = '') {
   if (nome.includes('Baphomet') || nome.includes('Lilith') || nome.includes('Lúcifer')) return 'boss';
-  if (nome.includes('Papa') || nome.includes('Inquisidor') || nome.includes('Cultista') || nome.includes('Freira')) return 'demon';
-  if (nome.includes('Serpente')) return 'snake';
+  if (nome.includes('Papa') || nome.includes('Inquisidor') || nome.includes('Cultista') || nome.includes('Freira') || nome.includes('Zelota')) return 'demon';
   if (nome.includes('Cão')) return 'wolf';
-  if (nome.includes('Alma')) return 'ghost';
-  if (nome.includes('Gárgula')) return 'bat';
-  if (nome.includes('Aberração') || nome.includes('Olho')) return 'cosmic';
-  if (nome.includes('Cadáver')) return 'zombie';
-  if (nome.includes('Imp')) return 'demon';
+  if (nome.includes('Alma') || nome.includes('Espectro')) return 'ghost';
+  if (nome.includes('Gárgula') || nome.includes('Anjo')) return 'bat';
+  if (nome.includes('Aberração') || nome.includes('Olho') || nome.includes('Abissal')) return 'cosmic';
+  if (nome.includes('Cadáver') || nome.includes('Esqueleto') || nome.includes('Cavaleiro')) return 'zombie';
+  if (nome.includes('Imp') || nome.includes('Succubus')) return 'demon';
   return 'default';
 }
 
@@ -476,17 +479,36 @@ function modeloMonstro(tipo) {
   return fn();
 }
 
+const _spritesProntos = new Set();
+function srcSprite(arq) {
+  return `monstros/anim/${arq}`;
+}
+
+function preCarregarSprite(arq) {
+  if (!arq || _spritesProntos.has(arq)) return;
+  _spritesProntos.add(arq);
+  const img = new Image();
+  img.src = srcSprite(arq);
+}
+
+function spriteHtml(arq, rotulo) {
+  preCarregarSprite(arq);
+  return `<div class="modelo-anim" role="img" aria-label="${rotulo}" style="background-image:url('${srcSprite(arq)}')"></div>`;
+}
+
 function bossSvg(nome = 'Baphomet') {
-  const arq = nome.includes('Lúcifer') ? 'lucifer.png' : (rodada % 2 === 0 ? 'lilith.png' : 'baphomet.png');
-  return `<img class="modelo-img" src="monstros/${arq}" alt="${nome}" draggable="false">`;
+  const arq = nome.includes('Lúcifer') ? 'lucifer.webp' : (rodada % 2 === 0 ? 'lilith.webp' : 'baphomet.webp');
+  return spriteHtml(arq, nome);
 }
 
 function spriteMonstro(emoji, nome = '') {
   const base = nome.replace(/\s*\+\d+$/, '');
-  const arq = SPRITES_ARQUIVO[base] || (emoji === '😈' ? 'lucifer.png' : '');
-  if (arq) return `<img class="modelo-img" src="monstros/${arq}" alt="${nome || 'Inimigo'}" draggable="false">`;
-  const tipo = identidadeMonstro(emoji, nome);
-  return modeloMonstro(tipo);
+  const arq = SPRITES_ARQUIVO[base] || (emoji === '😈' ? 'lucifer.webp' : 'cultista.webp');
+  const html = spriteHtml(arq, base || 'Inimigo');
+  // deixa o proximo inimigo pronto antes de aparecer
+  const proximo = MONSTROS[mobNivel % MONSTROS.length];
+  if (proximo) preCarregarSprite(SPRITES_ARQUIVO[proximo[1]]);
+  return html;
 }
 
 function animarChegadaBoss() {
@@ -889,7 +911,15 @@ function piscar() {
 }
 
 function animarMonstro(tipo) {
+  const sprite = monstroEl.querySelector('.modelo-anim');
   if (tipo === 'acerto') {
+    if (sprite) {
+      sprite.classList.remove('levando');
+      void sprite.offsetWidth;
+      sprite.classList.add('levando');
+      clearTimeout(sprite._levandoTimer);
+      sprite._levandoTimer = setTimeout(() => sprite.classList.remove('levando'), 540);
+    }
     monstroEl.animate([
       { transform: 'scale(1)' },
       { transform: 'scale(1.16, .88) translateX(8px) rotate(5deg)', offset: 0.35 },
@@ -1888,6 +1918,11 @@ function matarMonstro(bonusMoedas) {
     hp = 0;
     hpBar.style.width = '0%';
     hpText.textContent = `0 / ${hpMax}`;
+    const sprite = monstroEl.querySelector('.modelo-anim');
+    if (sprite) {
+      sprite.classList.remove('levando');
+      sprite.classList.add('morrendo');
+    }
     nomeMonstroEl.textContent = '😈 BOSS DEMÔNIO DERROTADO';
     mostrarMensagem('⚔ DESAFIO VENCIDO — LÚCIFER FOI DERROTADO');
     tocarSom('moeda');
