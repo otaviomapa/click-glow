@@ -26,27 +26,41 @@ const PODERES_LUVA = [
 ];
 
 const MONSTROS = [
-  ['👾', 'Slime de Bolso'],     ['🦇', 'Morcego Noturno'],  ['🐺', 'Lobo Cinzento'],
-  ['🦀', 'Caranguejo Feroz'],   ['🐍', 'Serpente Venenosa'],['🦅', 'Falcão Imperial'],
-  ['🐲', 'Dragão Jovem'],      ['👻', 'Fantasma Errante'], ['🦄', 'Unicórnio Caótico'],
-  ['🐉', 'Dragão Ancião'],     ['👹', 'Ogro Furioso'],     ['🧟', 'Zumbi Mutante'],
-  ['🦖', 'Tiranossauro'],      ['👺', 'Demônio das Sombras'], ['🐙', 'Polvo Cósmico']
+  ['🕯️', 'Cultista'],          ['⛪', 'Freira Possuída'],   ['😈', 'Imp'],
+  ['👁️', 'Olho do Caos'],      ['🧟', 'Cadáver Vivente'],   ['🎭', 'Inquisidor'],
+  ['🐺', 'Cão Infernal'],      ['💀', 'Alma Penada'],       ['🦇', 'Gárgula Demoníaca'],
+  ['🐙', 'Aberração'],         ['⚔️', 'Lúcifer'],           ['✝️', 'Papa Sombrio'],
+  ['🐍', 'Serpente do Éden'],  ['🌙', 'Lilith'],            ['🐐', 'Baphomet']
 ];
 
+const SPRITES_ARQUIVO = {
+  'Cultista': 'cultista.png',
+  'Freira Possuída': 'freira-possuida.png',
+  'Imp': 'imp.png',
+  'Olho do Caos': 'olho-do-caos.png',
+  'Cadáver Vivente': 'cadaver-vivente.png',
+  'Inquisidor': 'inquisidor.png',
+  'Cão Infernal': 'cao-infernal.png',
+  'Alma Penada': 'alma-penada.png',
+  'Gárgula Demoníaca': 'gargula-demoniaca.png',
+  'Aberração': 'aberracao.png',
+  'Lúcifer': 'lucifer.png',
+  'Papa Sombrio': 'papa-sombrio.png',
+  'Serpente do Éden': 'serpente-do-eden.png',
+  'Lilith': 'lilith.png',
+  'Baphomet': 'baphomet.png'
+};
+
 function identidadeMonstro(emoji, nome = '') {
-  if (emoji === '🐲' || emoji === '🐉') return 'dragon';
-  if (emoji === '👹' || emoji === '👺') return nome.includes('Ogro') ? 'ogre' : 'demon';
-  if (emoji === '👾') return 'slime';
-  if (emoji === '🦇') return 'bat';
-  if (emoji === '🐺') return 'wolf';
-  if (emoji === '🦀') return 'crab';
-  if (emoji === '🐍') return 'snake';
-  if (emoji === '🦅') return 'hawk';
-  if (emoji === '👻') return 'ghost';
-  if (emoji === '🐙') return 'cosmic';
-  if (emoji === '🦄') return 'unicorn';
-  if (emoji === '🧟') return 'zombie';
-  if (emoji === '🦖') return 'dinosaur';
+  if (nome.includes('Baphomet') || nome.includes('Lilith') || nome.includes('Lúcifer')) return 'boss';
+  if (nome.includes('Papa') || nome.includes('Inquisidor') || nome.includes('Cultista') || nome.includes('Freira')) return 'demon';
+  if (nome.includes('Serpente')) return 'snake';
+  if (nome.includes('Cão')) return 'wolf';
+  if (nome.includes('Alma')) return 'ghost';
+  if (nome.includes('Gárgula')) return 'bat';
+  if (nome.includes('Aberração') || nome.includes('Olho')) return 'cosmic';
+  if (nome.includes('Cadáver')) return 'zombie';
+  if (nome.includes('Imp')) return 'demon';
   return 'default';
 }
 
@@ -462,9 +476,15 @@ function modeloMonstro(tipo) {
   return fn();
 }
 
-function bossSvg() { return modeloMonstro('boss'); }
+function bossSvg(nome = 'Baphomet') {
+  const arq = nome.includes('Lúcifer') ? 'lucifer.png' : (rodada % 2 === 0 ? 'lilith.png' : 'baphomet.png');
+  return `<img class="modelo-img" src="monstros/${arq}" alt="${nome}" draggable="false">`;
+}
 
 function spriteMonstro(emoji, nome = '') {
+  const base = nome.replace(/\s*\+\d+$/, '');
+  const arq = SPRITES_ARQUIVO[base] || (emoji === '😈' ? 'lucifer.png' : '');
+  if (arq) return `<img class="modelo-img" src="monstros/${arq}" alt="${nome || 'Inimigo'}" draggable="false">`;
   const tipo = identidadeMonstro(emoji, nome);
   return modeloMonstro(tipo);
 }
@@ -1378,19 +1398,20 @@ function atualizarMonstro(comAnimacao = false) {
 
   if (demonioProva) {
     monstroEl.dataset.monster = 'demon';
-    monstroEl.innerHTML = spriteMonstro('😈');
+    monstroEl.innerHTML = bossSvg('Lúcifer');
     monstroEl.classList.add('chefe');
     monstroEl.classList.remove('acerto', 'erro');
     nomeMonstroEl.textContent = '😈 BOSS DEMÔNIO — LÚCIFER';
     if (comAnimacao) animarChegadaBoss();
   } else if (bossAtivo) {
     monstroEl.dataset.monster = 'boss';
-    monstroEl.innerHTML = bossSvg();
+    const nomeChefe = modoCapeta
+      ? `Lúcifer, o Senhor ${rodada}`
+      : `👑 BOSS: ${rodada % 2 === 0 ? 'Lilith' : 'Baphomet'} ${rodada}`;
+    monstroEl.innerHTML = bossSvg(modoCapeta ? 'Lúcifer' : nomeChefe);
     monstroEl.classList.add('chefe');
     monstroEl.classList.remove('acerto', 'erro');
-    nomeMonstroEl.textContent = modoCapeta
-      ? `Lúcifer, o Senhor ${rodada}`
-      : `👑 BOSS: Senhor das Trevas ${rodada}`;
+    nomeMonstroEl.textContent = nomeChefe;
     if (comAnimacao) animarChegadaBoss();
   } else {
     monstroEl.classList.remove('chefe', 'chegando');
@@ -1398,15 +1419,10 @@ function atualizarMonstro(comAnimacao = false) {
     const ciclo = Math.floor((mobNivel - 1) / MONSTROS.length);
     const [emoji, nome] = MONSTROS[indice];
     const sprite = modoCapeta ? '😈' : emoji;
+    const nomeExibido = modoCapeta ? `Lúcifer ${mobNivel}` : (ciclo > 0 ? `${nome} +${ciclo}` : nome);
     monstroEl.dataset.monster = modoCapeta ? 'demon' : identidadeMonstro(emoji, nome);
-    monstroEl.innerHTML = spriteMonstro(sprite, nome);
-    monstroEl.classList.remove('nascendo');
-    void monstroEl.offsetWidth;
-    monstroEl.classList.add('nascendo');
-    setTimeout(() => monstroEl.classList.remove('nascendo'), 450);
-    nomeMonstroEl.textContent = modoCapeta
-      ? `Lúcifer ${mobNivel}`
-      : (ciclo > 0 ? `${nome} +${ciclo}` : nome);
+    monstroEl.innerHTML = spriteMonstro(sprite, nomeExibido);
+    nomeMonstroEl.textContent = nomeExibido;
   }
 
   infoMonstroEl.textContent = demonioProva
