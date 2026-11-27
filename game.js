@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '37';
+const ASSETS_V = '38';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -583,15 +583,33 @@ function buildVisualAtual() {
   return BUILD_POR_SLOT[melhor.slot] || 'base';
 }
 
+const HEROI_RESERVA = {
+  heroi: 'personagens/hero_builds/base.webp',
+  antimodelo: 'personagens/anti_builds/base.webp'
+};
+
 function renderHeroi() {
   const antimodelo = modoCapeta;
   const familia = antimodelo ? 'antimodelo' : 'heroi';
   const build = buildVisualAtual();
-  const pasta = BUILDS_HEROI[familia];
-  const arq = pasta[build];
+  const pasta = BUILDS_HEROI[familia] || BUILDS_HEROI.heroi;
+  // chave inesperada de save antigo não pode virar "undefined.webp"
+  const arq = pasta[build] || pasta.base;
   heroi.dataset.heroi = familia;
-  heroi.dataset.build = String(build);
-  heroi.innerHTML = `<img class="modelo-img heroi-img" src="${arq}?v=${ASSETS_V}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
+  heroi.dataset.build = String(pasta[build] ? build : 'base');
+
+  const img = document.createElement('img');
+  img.className = 'modelo-img heroi-img';
+  img.alt = antimodelo ? 'Antimodelo 666' : 'Herói cruzado';
+  img.draggable = false;
+  img.src = `${arq}?v=${ASSETS_V}`;
+  // se o preset modular falhar (cache velho, CDN ou arquivo ausente), o herói
+  // nunca fica invisível: cai no retrato antigo e, se esse também falhar, emoji
+  img.onerror = () => {
+    img.onerror = () => { heroi.textContent = antimodelo ? '😈' : '🛡️'; };
+    img.src = `${HEROI_RESERVA[familia]}?v=${ASSETS_V}`;
+  };
+  heroi.replaceChildren(img);
 }
 
 /* ---------- ícones do pack Crusader (SVG por forma, slot e raridade) ---------- */
