@@ -1,17 +1,17 @@
 # Click Glow — Arena de Monstros
 
-Jogo de clique com provação inicial, bênção elemental, loja, raridades e bosses.
+Jogo de clique com desafio inicial, bênção elemental, loja, raridades e bosses.
 
 **Jogar:** https://otaviomapa.github.io/click-glow/
 
 ## Como jogar
 
-- **INICIAR PROVAÇÃO**: no começo só o clique em **ATACAR** funciona.
+- **COMEÇAR JORNADA**: no começo só ataque (clique ou **ESPAÇO**); loja e poderes ficam bloqueados.
 - Alcance **100 pontos** para despertar o **Boss Demônio**.
 - Derrote-o para receber a bênção de Deus e escolher **fogo, gelo ou raio**.
 - Depois da bênção liberam-se loja, inventário, magia, seringa, pausa e configurações.
 - **☰** na topbar (ou **ESC**) abre o menu de pausa com suas conquistas.
-- **ESPAÇO** ataca e **P** pausa a luta (após a provação).
+- **ESPAÇO** ataca e **P** pausa a luta.
 
 ## Arquivos
 

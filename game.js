@@ -1099,7 +1099,7 @@ function atualizarMonstro(comAnimacao = false) {
   }
 
   infoMonstroEl.textContent = demonioProva
-    ? `PROVAÇÃO · Boss Demônio · ${hpMax} de vida`
+    ? `DESAFIO · Boss Demônio · ${hpMax} de vida`
     : `${bossAtivo ? 'BOSS' : 'Monstro'} nível ${mobNivel} · ${hpMax} de vida · ${Math.round(100 - taxaAcerto())}% de erro`;
   hpBar.style.width = '100%';
   hpText.textContent = `${hp} / ${hpMax}`;
@@ -1119,7 +1119,7 @@ function renderRota() {
   if (!trilha) return;
   const nos = [];
   if (demonioProva) {
-    nos.push({ emoji: '😈', nome: 'Boss Demônio', rotulo: 'PROVAÇÃO', atual: true, boss: true });
+    nos.push({ emoji: '😈', nome: 'Boss Demônio', rotulo: 'DESAFIO', atual: true, boss: true });
     for (let k = 0; k < 3; k++) {
       const alvo = nomeDoNivel(mobNivel + k);
       nos.push({ emoji: alvo.emoji, nome: alvo.nome, rotulo: 'APÓS A BÊNÇÃO', atual: false, boss: false });
@@ -1140,7 +1140,7 @@ function renderRota() {
     nos.push({
       emoji: provacaoAtiva ? '😈' : '👑',
       nome: provacaoAtiva ? 'Boss Demônio' : 'BOSS',
-      rotulo: provacaoAtiva ? '100 PTS · PROVAÇÃO' : '100 PTS',
+      rotulo: provacaoAtiva ? '100 PTS · DESAFIO' : '100 PTS',
       atual: false, boss: true
     });
   }
@@ -1153,9 +1153,9 @@ function renderRota() {
   const info = el('rotaInfo');
   if (info) {
     info.textContent = demonioProva
-      ? `PROVAÇÃO — FALTAM ${Math.max(0, hp)} DE DANO PARA VENCER O DEMÔNIO`
+      ? `DESAFIO — FALTAM ${Math.max(0, hp)} DE DANO PARA VENCER O DEMÔNIO`
       : provacaoAtiva
-        ? `PROVAÇÃO — FALTAM ${Math.max(0, 100 - pontos)} PTS PARA O DEMÔNIO`
+        ? `DESAFIO — FALTAM ${Math.max(0, 100 - pontos)} PTS PARA O DEMÔNIO`
         : bossAtivo
           ? 'O BOSS ESTÁ NA ARENA'
           : `FALTAM ${Math.max(0, 100 - pontos)} PTS PARA O BOSS`;
@@ -1197,7 +1197,7 @@ function renderHUD() {
   if (el('recordeCombo')) el('recordeCombo').textContent = comboMax;
   renderRota();
   infoMonstroEl.textContent = demonioProva
-    ? `PROVAÇÃO · Boss Demônio · ${hpMax} de vida`
+    ? `DESAFIO · Boss Demônio · ${hpMax} de vida`
     : `${bossAtivo ? 'BOSS' : 'Monstro'} nível ${mobNivel} · ${hpMax} de vida · ${Math.round(100 - acerto)}% de erro`;
   atualizarCompras();
 }
@@ -1277,7 +1277,7 @@ function renderMagia() {
     ? '⚡ ATIVO AUTOMÁTICO'
     : luva ? '⏳ AGUARDANDO MONSTRO' : '⏳ SEM LUVA';
   magiaUpgradeBtn.disabled = provacaoAtiva || moedas < custoMagia();
-  magiaUpgradeBtn.title = provacaoAtiva ? 'Disponível após a provação' : '';
+  magiaUpgradeBtn.title = provacaoAtiva ? 'Disponível após o desafio' : '';
   document.querySelectorAll('.elem-btn').forEach(b => {
     b.classList.toggle('ativo', !!luva && b.dataset.poder === magia.elemento);
     b.setAttribute('aria-disabled', String(provacaoAtiva));
@@ -1507,7 +1507,7 @@ function matarMonstro(bonusMoedas) {
     hpBar.style.width = '0%';
     hpText.textContent = `0 / ${hpMax}`;
     nomeMonstroEl.textContent = '😈 BOSS DEMÔNIO DERROTADO';
-    mostrarMensagem('⚔ PROVAÇÃO SUPERADA — LÚCIFER FOI DERROTADO');
+    mostrarMensagem('⚔ DESAFIO VENCIDO — LÚCIFER FOI DERROTADO');
     tocarSom('moeda');
     el('provaAviso').hidden = true;
     document.body.classList.remove('provacao-ativa');
@@ -1583,7 +1583,7 @@ function resetarPontos() {
       demonioProva = true;
       bossAtivo = true;
       atualizarMonstro(true);
-      mostrarMensagem('😈 PROVAÇÃO FINAL — DERROTE O BOSS DEMÔNIO!');
+      mostrarMensagem('😈 DESAFIO FINAL — DERROTE O BOSS DEMÔNIO!');
     } else if (!bossAtivo) {
       bossAtivo = true;
       atualizarMonstro(true); // chegada do boss com fala e animação
@@ -1996,14 +1996,14 @@ function iniciarJogo() {
   document.body.classList.remove('pre-jogo');
   document.body.classList.add('provacao-ativa');
 
-  // durante a provação só o clique funciona
+  // durante o desafio, ataque só por clique ou ESPAÇO
   el('provaAviso').hidden = false;
   el('btnPause').style.display = 'none';
 
   atualizarMonstro(true);
   renderTudo();
   renderRota();
-  mostrarMensagem('⚔ PROVAÇÃO INICIADA! SÓ O CLIQUE PODE LHE AJUDAR.');
+  mostrarMensagem('⚔ JORNADA INICIADA — CLIQUE OU USE ESPAÇO.');
   tocarSom('nivel');
 }
 
@@ -2057,13 +2057,15 @@ addEventListener('keydown', e => {
     if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); fecharMenuPausa(); }
     return;
   }
+  // início e bênção cobrem o jogo: o teclado não ataca por baixo
+  if (!el('inicio').hidden) return;
   if (e.key === 'Escape') {
     if (!el('overlay').hidden) { fecharOverlay(); return; }
     if (!provacaoAtiva && !resetando) abrirMenuPausa();
     return;
   }
   if (provacaoAtiva) {
-    if (e.code === 'Space') e.preventDefault();
+    if (e.code === 'Space') { e.preventDefault(); atacar(); }
     return;
   }
   if (!el('overlay').hidden) return;
