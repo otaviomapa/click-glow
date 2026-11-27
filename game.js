@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '32';
+const ASSETS_V = '33';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -555,14 +555,20 @@ const BUILDS_HEROI = {
   antimodelo: Object.freeze(Object.fromEntries(Array.from({ length: 9 }, (_, i) => [i + 1, `anti_builds/build_${i + 1}.webp`])))
 };
 
+// cada slot/raridade/elemento soma um peso fixo: equipar ou trocar um item
+// sempre muda de retrato, sem depender de OR mascarado que pode colidir
+const INDICE_SLOT = { arma: 0, mira: 1, amuleto: 2, luva: 3, talisma: 4 };
+const INDICE_RAR = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
+const INDICE_ELEMENTO = { fogo: 1, gelo: 2, raio: 3 };
+
 function buildVisualAtual() {
   const itens = Object.values(equipados).filter(Boolean);
   if (!itens.length) return 1;
-  const forcas = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
-  const soma = itens.reduce((total, item) => total + (forcas[item.rar] ?? 0) + (item.poder ? ({ fogo: 0, gelo: 1, raio: 2 }[item.poder] || 0) : 0), 0);
-  const perfil = Math.round(soma / itens.length);
-  const mascara = itens.reduce((mask, item) => mask ^ ((item.slot.length * 13 + (forcas[item.rar] || 0) * 7 + (item.poder ? ({ fogo: 1, gelo: 3, raio: 5 }[item.poder] || 0) : 0)) & 255), 0);
-  return 1 + ((perfil * 2 + (mascara % 7) + itens.length * 2) % 9);
+  const peso = itens.reduce((total, item) => total
+    + (INDICE_SLOT[item.slot] ?? 0) + 1
+    + (INDICE_RAR[item.rar] ?? 0)
+    + (item.poder ? (INDICE_ELEMENTO[item.poder] ?? 0) : 0), 0);
+  return 1 + (peso % 9);
 }
 
 function renderHeroi() {
