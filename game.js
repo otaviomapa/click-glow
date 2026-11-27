@@ -537,114 +537,12 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
-/* ---------- herói cruzado com equipamentos visíveis ---------- */
+/* ---------- herói cruzado e antimodelo 666 (sprites do pacote) ---------- */
 function renderHeroi() {
-  const cap = modoCapeta;
-  const corCapa = cap ? '#3a064d' : '#8e1121';
-  const corCapaBorda = cap ? '#c95cff' : '#e04858';
-  const corTunica = cap ? '#211033' : '#e6ebf2';
-  const corTunicaSombra = cap ? '#130821' : '#b7c2d1';
-  const corCruz = cap ? '#d938ff' : '#c8192b';
-  const corElmo = cap ? '#5a4e6e' : '#b8c4d4';
-  const corElmoEscuro = cap ? '#2e243d' : '#6c7a8e';
-  const corElmoLuz = cap ? '#a38bc4' : '#eef4fc';
-  const corOlho = equipados.mira ? equipados.mira.cor : (cap ? '#39ff14' : '#7ef9ff');
-  const corLuva = equipados.luva ? equipados.luva.cor : (cap ? '#6a4c93' : '#8f9eb3');
-  const elemLuva = equipados.luva ? ELEMENTOS[equipados.luva.poder || 'fogo'] : null;
-
-  const capa = `<path class="anim-cape" d="M21 34 C10 44, 8 60, 14 71 L58 71 C64 60, 62 44, 51 34 Z" fill="${corCapa}" stroke="${corCapaBorda}" stroke-width="1.2"/>`;
-
-  const chifres = cap
-    ? `<path d="M25 18 C17 11, 17 4, 23 2 C23 9, 26 13, 30 15 Z" fill="#e0b3ff" stroke="#4a166e" stroke-width="0.9"/>
-       <path d="M51 18 C59 11, 59 4, 53 2 C53 9, 50 13, 46 15 Z" fill="#e0b3ff" stroke="#4a166e" stroke-width="0.9"/>`
-    : '';
-
-  const miraSvg = equipados.mira
-    ? `<circle cx="44" cy="24" r="5.2" fill="none" stroke="${equipados.mira.cor}" stroke-width="1.5" opacity="0.95"/>
-       <line x1="44" y1="17" x2="44" y2="20" stroke="${equipados.mira.cor}" stroke-width="1.2"/>
-       <line x1="44" y1="28" x2="44" y2="31" stroke="${equipados.mira.cor}" stroke-width="1.2"/>`
-    : '';
-
-  const amuletoSvg = equipados.amuleto
-    ? `<polygon points="38,41 42.5,46 38,51 33.5,46" fill="${equipados.amuleto.cor}" stroke="#ffffff" stroke-width="1.1" class="anim-gem"/>`
-    : '';
-
-  const talismaSvg = equipados.talisma
-    ? `<g class="anim-orbit" transform="translate(13,44)">
-         <circle cx="0" cy="-3" r="3" fill="${equipados.talisma.cor}"/>
-         <circle cx="-3" cy="1" r="3" fill="${equipados.talisma.cor}"/>
-         <circle cx="3" cy="1" r="3" fill="${equipados.talisma.cor}"/>
-         <circle cx="0" cy="0" r="1.5" fill="#fff"/>
-       </g>`
-    : '';
-
-  const armaSvg = equipados.arma
-    ? `<g class="anim-weapon" transform="translate(52,32) rotate(-18)">
-         <circle cx="5" cy="27" r="2.2" fill="${equipados.arma.cor}" stroke="#241108" stroke-width="0.8"/>
-         <rect x="3.5" y="18" width="3" height="8" rx="1" fill="#592811"/>
-         <rect x="-2" y="16" width="14" height="3.2" rx="1.4" fill="${equipados.arma.cor}" stroke="#241108" stroke-width="0.6"/>
-         <polygon points="5,-6 8.5,16 1.5,16" fill="#e6f2ff" stroke="#ffffff" stroke-width="0.7"/>
-         <line x1="5" y1="-2" x2="5" y2="14" stroke="#90b4d8" stroke-width="1"/>
-       </g>`
-    : '';
-
-  const auraLuva = elemLuva
-    ? `<circle cx="22" cy="54" r="5.5" fill="${elemLuva.cor}" opacity="0.55" class="anim-gem"/>
-       <circle cx="54" cy="54" r="5.5" fill="${elemLuva.cor}" opacity="0.55" class="anim-gem"/>`
-    : '';
-
-  heroi.innerHTML = `<svg class="modelo-svg modelo-heroi" viewBox="0 0 76 76" aria-hidden="true">
-    <defs>
-      <linearGradient id="hero-helm-g" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="${corElmoEscuro}"/>
-        <stop offset="45%" stop-color="${corElmoLuz}"/>
-        <stop offset="100%" stop-color="${corElmo}"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="38" cy="71" rx="21" ry="4" fill="rgba(0,0,0,0.48)"/>
-    ${capa}
-    <g class="anim-bob">
-      ${chifres}
-      <!-- ombreiras de aço -->
-      <ellipse cx="23" cy="40" rx="6.5" ry="5" fill="${corElmo}" stroke="${corElmoLuz}" stroke-width="1.1"/>
-      <ellipse cx="53" cy="40" rx="6.5" ry="5" fill="${corElmo}" stroke="${corElmoLuz}" stroke-width="1.1"/>
-      <!-- túnica / tabardo templário -->
-      <path d="M24 37 L52 37 L55 66 L21 66 Z" fill="${corTunica}" stroke="${corTunicaSombra}" stroke-width="1.3"/>
-      <path d="M38 37 L52 37 L55 66 L38 66 Z" fill="${corTunicaSombra}" opacity="0.28"/>
-      <!-- cruz templária no peito -->
-      <rect x="35.8" y="39" width="4.4" height="17" rx="0.8" fill="${corCruz}"/>
-      <rect x="30.5" y="44" width="15" height="4.4" rx="0.8" fill="${corCruz}"/>
-      <!-- cinto e fivela dourada -->
-      <rect x="22" y="57" width="32" height="4" rx="1.5" fill="#4a2511"/>
-      <rect x="35" y="56.4" width="6" height="5.2" rx="1" fill="#ffd447" stroke="#7a5200" stroke-width="0.8"/>
-      ${amuletoSvg}
-      <!-- escudo cruzado no braço esquerdo -->
-      <path d="M13 41 L25 41 L25 53 C25 59, 19 63, 19 63 C19 63, 13 59, 13 53 Z" fill="${corTunica}" stroke="${corElmoLuz}" stroke-width="1.4"/>
-      <rect x="17.8" y="43.5" width="2.4" height="15" fill="${corCruz}"/>
-      <rect x="14.5" y="48.5" width="9" height="2.4" fill="${corCruz}"/>
-      <!-- elmo grande (Great Helm) -->
-      <path d="M26 16 C26 11, 50 11, 50 16 L51 35 C51 37, 25 37, 25 35 Z" fill="url(#hero-helm-g)" stroke="${corElmoEscuro}" stroke-width="1.3"/>
-      <!-- fenda do visor + olhos -->
-      <rect x="27.5" y="21.5" width="21" height="4.8" rx="1.6" fill="#0d0914"/>
-      <ellipse cx="32.5" cy="23.9" rx="2.3" ry="1.6" fill="${corOlho}"/>
-      <ellipse cx="43.5" cy="23.9" rx="2.3" ry="1.6" fill="${corOlho}"/>
-      <!-- reforço em cruz dourada no elmo -->
-      <rect x="36.5" y="13.5" width="3" height="22" rx="1" fill="#ffd447" opacity="0.92"/>
-      <rect x="27" y="22.8" width="22" height="2.2" rx="1" fill="#ffd447" opacity="0.88"/>
-      <!-- respiradouros do elmo -->
-      <circle cx="31" cy="30" r="1" fill="#222a36"/>
-      <circle cx="34" cy="30" r="1" fill="#222a36"/>
-      <circle cx="42" cy="30" r="1" fill="#222a36"/>
-      <circle cx="45" cy="30" r="1" fill="#222a36"/>
-      ${miraSvg}
-      ${auraLuva}
-      <!-- manoplas -->
-      <rect x="17.5" y="50" width="9" height="8" rx="3" fill="${corLuva}" stroke="#ffffff" stroke-width="0.9"/>
-      <rect x="49.5" y="50" width="9" height="8" rx="3" fill="${corLuva}" stroke="#ffffff" stroke-width="0.9"/>
-      ${talismaSvg}
-      ${armaSvg}
-    </g>
-  </svg>`;
+  const capeta = modoCapeta;
+  const arq = capeta ? 'antimodelo-666.webp' : 'heroi-cruzado.webp';
+  heroi.dataset.heroi = capeta ? 'antimodelo' : 'cruzado';
+  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}" alt="${capeta ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
 }
 
 /* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
