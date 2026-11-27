@@ -1003,16 +1003,16 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 14px 32px rgba(0, 0, 0, .48), 0 0 20px color-mix(in srgb, var(--c3) 26%, transparent);
 }
 
-/* cenário de combate: ilustração gótica da catedral ao luar */
+/* cenário de combate: catedral gótica ilustrada */
 .cenario {
   position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
   border-radius: inherit;
-  background: #090b14 url("cenario-arena.svg") center 42% / cover no-repeat;
+  background: #090b14 url("cenario-arena.jpg") center 52% / cover no-repeat;
 }
 .cenario::after {
   content: ""; position: absolute; inset: 0; z-index: 1;
-  background: radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(6, 7, 14, .58) 100%),
-              linear-gradient(180deg, rgba(8, 10, 20, .15) 0%, transparent 45%, rgba(8, 9, 16, .68) 100%);
+  background: radial-gradient(ellipse at 50% 44%, transparent 35%, rgba(6, 7, 14, .52) 100%),
+              linear-gradient(180deg, rgba(6, 7, 16, .18) 0%, transparent 45%, rgba(6, 7, 14, .74) 100%);
   transition: background .4s ease;
 }
 .ceu-cenario,
@@ -1021,7 +1021,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .arco-cenario,
 .ruinas-cenario,
 .chao-cenario,
-.runas-cenario {
+.runas-cenario,
+.tochas-cenario,
+.estrelas-cenario {
   display: none;
 }
 .estrelas-cenario { position: absolute; inset: 5% 4% 45%; z-index: 2; }
@@ -1560,15 +1562,44 @@ body.modo-capeta .heroi, body.modo-capeta .monstro { filter: drop-shadow(0 0 22p
 .arena > :not(.cenario):not(.brilho-costas):not(.personagens) { z-index: 2; }
 
 /* barras */
-.barra { background: rgba(255, 255, 255, .075); box-shadow: none; }
-.barra.hp > div { background: linear-gradient(90deg, #b5544f, #cf8a4e); box-shadow: none; }
-.barra.hp.chefe > div { background: linear-gradient(90deg, #8f2f2f, #c2604a, #d8b26a); box-shadow: none; }
-.barra.progresso > div { background: linear-gradient(90deg, #68727e, #a7b2be); box-shadow: none; animation: none; }
-.barra.progresso > div::after { display: none; }
-.barra.hp::after {
-  background: repeating-linear-gradient(90deg, transparent 0 calc(8.333% - 1px), rgba(8, 10, 12, .5) calc(8.333% - 1px) 8.333%);
+.barra {
+  height: 14px; padding: 2px;
+  background: rgba(6, 7, 15, .82);
+  border: 1px solid rgba(255, 222, 148, .22);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .85), 0 4px 14px rgba(0, 0, 0, .35);
 }
-.barra-legenda { color: rgba(255, 255, 255, .42); }
+.barra.hp {
+  height: 19px;
+  border-color: rgba(255, 110, 120, .34);
+}
+.barra.hp > div {
+  background: linear-gradient(90deg, #a80c2c 0%, #ff2e55 55%, #ff8a2b 100%);
+  box-shadow: 0 0 14px rgba(255, 46, 85, .55), inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+.barra.hp.chefe > div {
+  background: linear-gradient(90deg, #690012 0%, #ff1e38 52%, #ffd447 100%);
+  box-shadow: 0 0 18px rgba(255, 40, 60, .7), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.barra.progresso {
+  height: 14px;
+  border-color: color-mix(in srgb, var(--c3) 34%, rgba(255, 222, 148, .22));
+}
+.barra.progresso > div {
+  background: linear-gradient(90deg, var(--c1), var(--c3), var(--c2), var(--c1));
+  background-size: 220% 100%;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--glow) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, .48);
+  animation: arco 3s linear infinite, progressoGlow 2.2s ease-in-out infinite;
+}
+.barra.progresso > div::after { display: block; }
+.barra.hp::after {
+  inset: 2px;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(6, 7, 14, .42) calc(10% - 1px) 10%);
+}
+.barra-legenda {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, .74);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+}
 
 /* estatísticas */
 .stat { background: #191c21; border: 1px solid rgba(255, 255, 255, .07); box-shadow: none; }
@@ -1805,8 +1836,7 @@ body.luta-pausada .seringa, body.luta-pausada .adaga { display: none; }
 }
 body.provacao-ativa .coluna,
 body.provacao-ativa .nav-inferior,
-body.provacao-ativa #btnStats,
-body.provacao-ativa #btnSettings {
+body.provacao-ativa #btnStats {
   opacity: .32; pointer-events: none; filter: grayscale(.7);
 }
 body.provacao-ativa .coluna *,

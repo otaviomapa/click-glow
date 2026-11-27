@@ -1006,7 +1006,7 @@ function verificarConquistas() {
 
 function abrirOverlay(tipo) {
   const overlay = el('overlay');
-  if (!overlay || provacaoAtiva) return;
+  if (!overlay || (provacaoAtiva && tipo !== 'settings')) return;
   const titulo = el('overlayTitulo');
   const corpo = el('overlayConteudo');
 
@@ -1053,7 +1053,9 @@ function abrirOverlay(tipo) {
         <option value="alta"${qualidade === 'alta' ? ' selected' : ''}>ALTA</option>
         <option value="media"${qualidade === 'media' ? ' selected' : ''}>MÉDIA</option>
       </select></div>
-      <div class="config-linha"><span>✨ Movimento reduzido</span><button id="movToggle">${movimentoReduzido ? 'DESATIVAR' : 'ATIVAR'}</button></div>`;
+      <div class="config-linha"><span>✨ Movimento reduzido</span><button id="movToggle">${movimentoReduzido ? 'DESATIVAR' : 'ATIVAR'}</button></div>
+      <div class="config-linha"><span>💾 Salvar progresso</span><button id="btnSalvarAgora">SALVAR AGORA</button></div>
+      <div class="config-linha"><span>🗑️ Resetar jogo</span><button id="btnResetarSave">APAGAR SAVE</button></div>`;
 
     const slider = el('volumeSlider');
     slider.addEventListener('input', e => {
@@ -1074,6 +1076,15 @@ function abrirOverlay(tipo) {
       movimentoReduzido = !movimentoReduzido;
       document.body.classList.toggle('movimento-reduzido', movimentoReduzido);
       e.target.textContent = movimentoReduzido ? 'DESATIVAR' : 'ATIVAR';
+    });
+    el('btnSalvarAgora').addEventListener('click', () => {
+      salvarJogo();
+      mostrarMensagem('💾 PROGRESSO SALVO!');
+    });
+    el('btnResetarSave').addEventListener('click', () => {
+      if (confirm('Tem certeza que deseja apagar todo o seu progresso salvo?')) {
+        resetarSave();
+      }
     });
   }
 
@@ -1295,9 +1306,12 @@ function atualizarMagiaBarra() {
   magiaProgresso.style.width = magia.ativada ? '100%' : '0%';
 }
 
+let _ultimoTickMagia = Date.now();
 function danoMagicoTick() {
-  if (provacaoAtiva) return;
   const agora = Date.now();
+  const dt = Math.min(Math.max((agora - _ultimoTickMagia) / 1000, 0), 60);
+  _ultimoTickMagia = agora;
+  if (provacaoAtiva) return;
   const ativo = agora < magia.ate;
   atualizarMagiaBarra();
   if (!jogoIniciado || lutaPausada) return;
@@ -1306,13 +1320,13 @@ function danoMagicoTick() {
     magia.ativaAgora = ativo;
     if (!ativo) {
       document.querySelectorAll('.magia-efeito').forEach(n => n.remove());
-      renderHUD();
+      renderHUD(false);
     }
   }
   if (!ativo || resetando || hp <= 0) return;
 
   const e = ELEMENTOS[magia.elemento];
-  magia.acumulado += dpsMagia() * e.mult * .1;
+  magia.acumulado += dpsMagia() * e.mult * dt;
   const dano = Math.floor(magia.acumulado);
   if (dano < 1) return;
   magia.acumulado -= dano;
@@ -1322,14 +1336,15 @@ function danoMagicoTick() {
   flutuante(`-${dano} ${e.emoji}`, e.cor, 60);
   hpBar.style.width = (hp / hpMax * 100) + '%';
   hpText.textContent = `${hp} / ${hpMax}`;
-  pontosEl.classList.remove('pulo');
-  void pontosEl.offsetWidth;
-  pontosEl.classList.add('pulo');
+  pontosEl.animate([
+    { transform: 'scale(1)' },
+    { transform: 'scale(1.16)', offset: 0.45 },
+    { transform: 'scale(1)' }
+  ], { duration: 160, easing: 'ease-out' });
 
   if (hp <= 0) matarMonstro(0);
   if (pontos >= 100) { resetarPontos(); return; }
-  renderHUD();
-  renderBuild();
+  renderHUD(false);
 }
 
 /* ---------- renderização ---------- */
@@ -2333,6 +2348,24 @@ function escolherElemento(id) {
 function iniciarJogo() {
   if (jogoIniciado) return;
   jogoIniciado = true;
+  clearInterval(falaTimer);
+  falaTimer = 0;
+  const tela = el('inicio');
+  if (tela) tela.hidden = true;
+  document.body.classList.remove('pre-jogo');
+
+  if (_saveCarregado) {
+    document.body.classList.toggle('provacao-ativa', provacaoAtiva);
+    el('provaAviso').hidden = !provacaoAtiva;
+    el('btnPause').style.display = provacaoAtiva ? 'none' : '';
+    renderTudo();
+    renderRota();
+    atualizarTituloAba();
+    mostrarMensagem('▶ JORNADA CONTINUADA!');
+    tocarSom('nivel');
+    return;
+  }
+
   provacaoAtiva = true;
   demonioProva = false;
   provaConcluida = false;
@@ -2340,11 +2373,6 @@ function iniciarJogo() {
   bossAtivo = false;
   pontos = 0;
   mobNivel = 1;
-  clearInterval(falaTimer);
-  falaTimer = 0;
-  const tela = el('inicio');
-  if (tela) tela.hidden = true;
-  document.body.classList.remove('pre-jogo');
   document.body.classList.add('provacao-ativa');
 
   // durante o desafio, ataque só por clique ou ESPAÇO
@@ -2354,6 +2382,7 @@ function iniciarJogo() {
   atualizarMonstro(true);
   renderTudo();
   renderRota();
+  atualizarTituloAba();
   mostrarMensagem('⚔ JORNADA INICIADA — CLIQUE OU USE ESPAÇO.');
   tocarSom('nivel');
 }
@@ -2514,14 +2543,141 @@ addEventListener('pointermove', e => {
   setTimeout(() => p.remove(), 520);
 }, { passive: true });
 
+/* ---------- sistema idle: persistência, progresso offline e título ao vivo ---------- */
+const SAVE_KEY = 'clickGlowSave_v1';
+
+function formatarCompacto(n) {
+  if (n < 1000) return String(Math.floor(n));
+  const sufixos = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi'];
+  const i = Math.min(Math.floor(Math.log10(n) / 3), sufixos.length - 1);
+  return (n / Math.pow(1000, i)).toFixed(1).replace(/\.0$/, '') + sufixos[i];
+}
+
+function atualizarTituloAba() {
+  if (!jogoIniciado) {
+    document.title = 'Click Glow — Arena de Monstros';
+    return;
+  }
+  document.title = `⚔️ ${formatarCompacto(moedas)} 🪙 · R${rodada} — Click Glow`;
+}
+
+function salvarJogo() {
+  try {
+    const dados = {
+      pontos, rodada, moedas, rolls, mobNivel, hp, hpMax, bossAtivo,
+      provacaoAtiva, demonioProva, provaConcluida, bencaoConcedida, elementoEscolhido,
+      idItem, inventario, equipados, loja, raridadeMinima, comboMax,
+      estatisticas, conquistas: [...conquistas],
+      magia: { nivel: magia.nivel, elemento: magia.elemento, ativada: magia.ativada },
+      ultimoSave: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(dados));
+  } catch (err) { /* ignora erro de quota/privacidade */ }
+}
+
+function aplicarProgressoOffline(ultimoSave) {
+  if (!ultimoSave || (!provaConcluida && !equipados.luva)) return;
+  const segs = Math.min(Math.max(Math.floor((Date.now() - ultimoSave) / 1000), 0), 28800);
+  if (segs < 10) return;
+
+  const e = ELEMENTOS[magia.elemento] || ELEMENTOS.fogo;
+  const dpsEfetivo = equipados.luva ? dpsMagia() * e.mult * 0.5 : (1 + Math.floor(rodada * 0.5));
+  const danoTotal = Math.floor(dpsEfetivo * segs);
+  const mortesOff = Math.max(0, Math.floor(danoTotal / Math.max(10, hpMax)));
+  const recompensaPorMorte = 8 + mobNivel * 4;
+  const moedasOff = Math.max(1, mortesOff * recompensaPorMorte + Math.floor(segs * 0.15));
+
+  moedas += moedasOff;
+  estatisticas.moedasGanhas += moedasOff;
+  estatisticas.mortes += mortesOff;
+  const mins = Math.floor(segs / 60);
+  const tempoTxt = mins >= 1 ? `${mins}min` : `${segs}s`;
+  setTimeout(() => {
+    mostrarMensagem(`🌙 OFFLINE (${tempoTxt}): +${formatarCompacto(moedasOff)} 🪙${mortesOff > 0 ? ` · ${mortesOff} monstros` : ''}`);
+  }, 600);
+}
+
+function carregarJogo() {
+  try {
+    const bruto = localStorage.getItem(SAVE_KEY);
+    if (!bruto) return false;
+    const d = JSON.parse(bruto);
+    if (typeof d !== 'object' || !d) return false;
+
+    pontos = Number(d.pontos) || 0;
+    rodada = Number(d.rodada) || 1;
+    moedas = Number(d.moedas) || 0;
+    rolls = Number(d.rolls ?? 3);
+    mobNivel = Number(d.mobNivel) || 1;
+    hpMax = Number(d.hpMax) || 10;
+    hp = Math.min(hpMax, Math.max(1, Number(d.hp) || hpMax));
+    bossAtivo = !!d.bossAtivo;
+    provacaoAtiva = !!d.provacaoAtiva;
+    demonioProva = !!d.demonioProva;
+    provaConcluida = !!d.provaConcluida;
+    bencaoConcedida = !!d.bencaoConcedida;
+    elementoEscolhido = d.elementoEscolhido || 'fogo';
+    idItem = Number(d.idItem) || 1;
+    inventario = Array.isArray(d.inventario) ? d.inventario : [];
+    equipados = d.equipados && typeof d.equipados === 'object' ? d.equipados : {};
+    loja = Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()];
+    if (d.raridadeMinima && typeof d.raridadeMinima === 'object') raridadeMinima = d.raridadeMinima;
+    comboMax = Number(d.comboMax) || 0;
+    if (d.estatisticas && typeof d.estatisticas === 'object') Object.assign(estatisticas, d.estatisticas);
+    conquistas.clear();
+    if (Array.isArray(d.conquistas)) d.conquistas.forEach(id => conquistas.add(id));
+    if (d.magia && typeof d.magia === 'object') {
+      magia.nivel = Number(d.magia.nivel) || 1;
+      magia.elemento = d.magia.elemento || 'fogo';
+      magia.ativada = !!d.magia.ativada;
+      magia.ate = magia.ativada ? Infinity : 0;
+    }
+
+    aplicarProgressoOffline(d.ultimoSave);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function resetarSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
+  location.reload();
+}
+
 document.addEventListener('visibilitychange', () => {
   document.body.classList.toggle('pausado', document.hidden);
   sincronizarMusica();
+  if (document.hidden) salvarJogo();
+  else _ultimoTickMagia = Date.now();
 });
+addEventListener('beforeunload', salvarJogo);
+setInterval(() => {
+  if (jogoIniciado) salvarJogo();
+  atualizarTituloAba();
+}, 10000);
 
-// começa do zero: sem inventário e sem itens equipados
-loja = [novoItemComum(), novoItem(), novoItem()];
-atualizarMonstro();
+// inicializa carregando save se existir, ou começando do zero
+const _saveCarregado = carregarJogo();
+if (!_saveCarregado) {
+  loja = [novoItemComum(), novoItem(), novoItem()];
+  atualizarMonstro();
+} else {
+  const hpSalvo = hp;
+  const hpMaxSalvo = hpMax;
+  const magiaAtivadaSalva = magia.ativada;
+  const magiaAteSalva = magia.ate;
+  atualizarMonstro();
+  hp = hpSalvo;
+  hpMax = hpMaxSalvo;
+  magia.ativada = magiaAtivadaSalva;
+  magia.ate = magiaAteSalva;
+  sincronizarMagia();
+  hpBar.style.width = (hp / hpMax * 100) + '%';
+  hpText.textContent = `${hp} / ${hpMax}`;
+}
 renderTudo();
+atualizarTituloAba();
 setInterval(danoMagicoTick, 100);
+if (_saveCarregado && el('btnComecar')) el('btnComecar').textContent = '▶ CONTINUAR JORNADA';
 abrirInicio();
