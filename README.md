@@ -19,7 +19,7 @@ Jogo de clique com desafio inicial, bênção elemental, loja, raridades e bosse
 - `style.css` — visual
 - `game.js` — toda a lógica
 - `monstros/anim/` — spritesheets animados (idle, hit e morte) dos 18 inimigos
-- `personagens/` — herói cruzado e antimodelo 666 (WebP)
+- `personagens/` — retratos base do cruzado/antimodelo e variações de build (WebP)
 - `icones/` — sprites SVG dos itens
 
 ## Bestiário animado
@@ -32,8 +32,14 @@ chefes Baphomet, Lilith e Lúcifer.
 ## Herói e fase secreta
 
 - **Herói normal:** cruzado (`personagens/heroi-cruzado.webp`).
-- **Fase secreta 666:** após a bênção, o retrato do herói troca para o
-  **antimodelo 666** (`personagens/antimodelo-666.webp`) e o monstro vira Lúcifer.
+- **Fase secreta 666:** após a bênção, o herói usa o visual de build do
+  **antimodelo 666** (`personagens/anti_builds/`).
+- Há **9 variações conceituais por personagem** (`personagens/hero_builds/` e
+  `personagens/anti_builds/`). O jogo escolhe automaticamente uma conforme a
+  combinação de raridades, peças equipadas e elemento da luva; mudanças de build
+  atualizam o sprite. A mesma variação pode aparecer em builds diferentes porque
+  o pacote só traz nove previews por personagem.
+- Os previews são concept art recortada, ainda não sprites modulares/animados.
 - Os inimigos são espelhados (`scaleX(-1)`) para encarar o herói à esquerda.
 
 ## Lista completa de itens
