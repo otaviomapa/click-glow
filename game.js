@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '33';
+const ASSETS_V = '34';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
