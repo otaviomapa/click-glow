@@ -266,6 +266,18 @@ body {
 .monstro[data-monster="zombie"] { --c1: #8b977d; --c2: #454b45; --c3: #c1bb91; }
 .monstro[data-monster="ghost"], .monstro[data-monster="cosmic"] { --c1: #96d7e5; --c2: #475cbb; --c3: #fff2c8; }
 .monstro[data-monster="default"] { --c1: #9d8c72; --c2: #4a515c; --c3: #e3c987; }
+/* sprite que não carrega cai no emoji, nunca numa caixa vazia */
+.monstro .modelo-anim.sprite-falhou {
+  background-image: none !important;
+  animation: none;
+  display: grid; place-items: center;
+}
+.monstro .modelo-anim.sprite-falhou::after {
+  content: attr(data-emoji);
+  font-size: clamp(48px, 16vw, 104px);
+  line-height: 1;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .7));
+}
 @keyframes flutuarMob { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-8px) rotate(1.5deg); } }
 .monstro.nascendo { animation: mobNascer .42s cubic-bezier(.2,1.35,.4,1) both; }
 @keyframes mobNascer {
@@ -1892,10 +1904,9 @@ body.luta-pausada .seringa, body.luta-pausada .adaga { display: none; }
 body.provacao-ativa .coluna,
 body.provacao-ativa .nav-inferior,
 body.provacao-ativa #btnStats {
-  opacity: .32; pointer-events: none; filter: grayscale(.7);
+  opacity: .32; filter: grayscale(.7);
 }
-body.provacao-ativa .coluna *,
-body.provacao-ativa .nav-inferior * { pointer-events: none !important; }
+/* o toque chega nos guardas de JS, que avisam o porquê em vez de morrer em silêncio */
 
 /* ---------- menu inicial & escolha divina ---------- */
 body.pre-jogo { overflow: hidden; }

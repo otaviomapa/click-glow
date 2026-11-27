@@ -479,32 +479,45 @@ function modeloMonstro(tipo) {
   return fn();
 }
 
+// muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
+const ASSETS_V = '31';
 const _spritesProntos = new Set();
+const _spritesFalhos = new Set();
+
 function srcSprite(arq) {
-  return `monstros/anim/${arq}`;
+  return `monstros/anim/${arq}?v=${ASSETS_V}`;
+}
+
+function marcarSpriteFalho(arq) {
+  _spritesFalhos.add(arq);
+  document.querySelectorAll(`.modelo-anim[data-sprite="${arq}"]`)
+    .forEach(n => n.classList.add('sprite-falhou'));
 }
 
 function preCarregarSprite(arq) {
   if (!arq || _spritesProntos.has(arq)) return;
   _spritesProntos.add(arq);
   const img = new Image();
+  // sprite que falha não deixa a arena vazia: cai no emoji do inimigo
+  img.onerror = () => marcarSpriteFalho(arq);
   img.src = srcSprite(arq);
 }
 
-function spriteHtml(arq, rotulo) {
+function spriteHtml(arq, rotulo, emoji = '👾') {
   preCarregarSprite(arq);
-  return `<div class="modelo-anim" role="img" aria-label="${rotulo}" style="background-image:url('${srcSprite(arq)}')"></div>`;
+  const falhou = _spritesFalhos.has(arq) ? ' sprite-falhou' : '';
+  return `<div class="modelo-anim${falhou}" data-sprite="${arq}" data-emoji="${emoji}" role="img" aria-label="${rotulo}" style="background-image:url('${srcSprite(arq)}')"></div>`;
 }
 
 function bossSvg(nome = 'Baphomet') {
   const arq = nome.includes('Lúcifer') ? 'lucifer.webp' : (rodada % 2 === 0 ? 'lilith.webp' : 'baphomet.webp');
-  return spriteHtml(arq, nome);
+  return spriteHtml(arq, nome, nome.includes('Lúcifer') ? '😈' : '👑');
 }
 
 function spriteMonstro(emoji, nome = '') {
   const base = nome.replace(/\s*\+\d+$/, '');
   const arq = SPRITES_ARQUIVO[base] || (emoji === '😈' ? 'lucifer.webp' : 'cultista.webp');
-  const html = spriteHtml(arq, base || 'Inimigo');
+  const html = spriteHtml(arq, base || 'Inimigo', emoji);
   // deixa o proximo inimigo pronto antes de aparecer
   const proximo = MONSTROS[mobNivel % MONSTROS.length];
   if (proximo) preCarregarSprite(SPRITES_ARQUIVO[proximo[1]]);
@@ -560,7 +573,7 @@ function renderHeroi() {
   const arq = pasta[build];
   heroi.dataset.heroi = familia;
   heroi.dataset.build = String(build);
-  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
+  heroi.innerHTML = `<img class="modelo-img heroi-img" src="personagens/${arq}?v=${ASSETS_V}" alt="${antimodelo ? 'Antimodelo 666' : 'Herói cruzado'}" draggable="false">`;
 }
 
 /* ---------- ícones SVG (Game-icons.net · CC BY 3.0, locais) ---------- */
@@ -810,6 +823,11 @@ function flutuante(texto, cor, deslocamento = 0) {
   setTimeout(() => d.remove(), 900);
 }
 
+// aviso único para o que está travado durante a jornada
+function avisarProvacao() {
+  flutuante('🔒 LIBERA APÓS VENCER O BOSS', '#dcb878', 80);
+}
+
 function mostrarMensagem(texto) {
   mensagem.textContent = texto;
   mensagem.classList.remove('mostrar');
@@ -972,7 +990,8 @@ function verificarConquistas() {
 
 function abrirOverlay(tipo) {
   const overlay = el('overlay');
-  if (!overlay || (provacaoAtiva && tipo !== 'settings')) return;
+  if (!overlay) return;
+  if (provacaoAtiva && tipo !== 'settings') { avisarProvacao(); return; }
   const titulo = el('overlayTitulo');
   const corpo = el('overlayConteudo');
 
@@ -1571,7 +1590,7 @@ function renderTudo() {
 /* ---------- ações ---------- */
 
 function rerolarLoja() {
-  if (provacaoAtiva) return false;
+  if (provacaoAtiva) { avisarProvacao(); return false; }
   if (rolls < 1) {
     mostrarMensagem('SEM ROLLS! MATE UM MONSTRO 🎲');
     return false;
@@ -1584,7 +1603,7 @@ function rerolarLoja() {
 }
 
 function comprar(id) {
-  if (provacaoAtiva) return;
+  if (provacaoAtiva) { avisarProvacao(); return; }
   const btn = document.querySelector(`[data-comprar="${id}"]`);
   const r = btn?.getBoundingClientRect();
   const indice = loja.findIndex(i => i && i.id === id);
@@ -1610,7 +1629,7 @@ function comprar(id) {
 }
 
 function equipar(id) {
-  if (provacaoAtiva) return;
+  if (provacaoAtiva) { avisarProvacao(); return; }
   const item = inventario.find(i => i.id === id);
   if (!item) return;
   equipados[item.slot] = item;
@@ -2435,11 +2454,11 @@ el('somBtn').addEventListener('click', () => {
   if (somAtivo) tocarSom('moeda');
 });
 el('rerolar').addEventListener('click', () => {
-  if (provacaoAtiva) return;
+  if (provacaoAtiva) { avisarProvacao(); return; }
   if (rerolarLoja()) flutuante('LOJA ROLADA!', '#9fb4c7', 90);
 });
 el('itensLoja').addEventListener('click', e => {
-  if (provacaoAtiva) return; // Bloqueia cliques na loja durante a provação
+  if (provacaoAtiva) { avisarProvacao(); return; } // loja só depois do Boss
   const comprado = e.target.closest('.item.comprado');
   if (comprado) { flutuante('COMPRADO — ROLE A LOJA 🎲', '#9fb4c7', 90); return; }
   const row = e.target.closest('.item[data-item-id]');
@@ -2458,7 +2477,7 @@ el('itensLoja').addEventListener('click', e => {
   comprar(item.id);
 });
 el('inventario').addEventListener('click', e => {
-  if (provacaoAtiva) return; // Bloqueia cliques no inventário durante a provação
+  if (provacaoAtiva) { avisarProvacao(); return; } // inventário só depois do Boss
   const b = e.target.closest('[data-equipar]');
   if (b) equipar(Number(b.dataset.equipar));
 });
@@ -2481,7 +2500,7 @@ el('overlay').addEventListener('click', e => {
   if (e.target === el('overlay')) fecharOverlay();
 });
 el('navInferior').addEventListener('click', e => {
-  if (provacaoAtiva) return; // Bloqueia cliques na nav inferior durante a provação
+  if (provacaoAtiva) { avisarProvacao(); return; } // nav liberada após o Boss
   const b = e.target.closest('[data-nav]');
   if (!b) return;
   el('navInferior').querySelectorAll('button').forEach(n => n.classList.toggle('ativo', n === b));
