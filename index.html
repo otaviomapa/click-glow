@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Click Glow — Arena de Monstros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:wght@400;600;700&family=Rajdhani:wght@600;700&family=Pirata+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=21">
+</head>
+<body>
+
+<div id="inicio" class="inicio" role="dialog" aria-modal="true" aria-label="Click Glow — menu, início e escolha do elemento">
+  <div class="inicio-brilho" aria-hidden="true"></div>
+  <div class="divino-cenario" aria-hidden="true">
+    <div class="divino-luz"></div>
+    <div class="divino-raios"></div>
+    <div class="divino-nuvens"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <section class="inicio-caixa" id="inicioMenu">
+    <p class="inicio-eyebrow">⚔️ ARENA DE MONSTROS</p>
+    <h1 class="inicio-logo" id="inicioTitulo">Click Glow</h1>
+    <p class="inicio-sub">Sua provação começa sem poderes. Clique para avançar, alcance 100 pontos e derrote o Boss Demônio para receber a bênção de Deus.</p>
+    <button class="inicio-btn" id="btnComecar" type="button">⚔ INICIAR PROVAÇÃO</button>
+    <button class="secundario inicio-secundario" id="btnInicioConquistas" type="button">🏆 VER CONQUISTAS</button>
+    <p class="inicio-dica">Durante a provação, somente o clique em ATACAR está disponível.</p>
+  </section>
+
+  <section class="inicio-caixa deus" id="deusPasso" hidden>
+    <div class="deus-figura" aria-hidden="true">
+      <span class="deus-raios"></span>
+      <span class="deus-simbolo">✝</span>
+    </div>
+    <p class="deus-fala" id="deusFala" aria-live="polite"></p>
+    <h2 class="deus-titulo">Escolha o elemento da sua luva</h2>
+    <p class="deus-sub">O primeiro dom é seu. Que elemento guiará sua mão?</p>
+    <div class="deus-opcoes">
+      <button class="deus-opt" type="button" data-elemento="fogo">
+        <span class="deus-opt-emoji">🔥</span>
+        <b>FOGO</b>
+        <small>Queimadura intensa<br>mais dano mágico</small>
+      </button>
+      <button class="deus-opt" type="button" data-elemento="gelo">
+        <span class="deus-opt-emoji">❄️</span>
+        <b>GELO</b>
+        <small>Frieza no golpe<br>+5% de acerto</small>
+      </button>
+      <button class="deus-opt" type="button" data-elemento="raio">
+        <span class="deus-opt-emoji">⚡</span>
+        <b>RAIO</b>
+        <small>Impulso veloz<br>+5% de crítico</small>
+      </button>
+    </div>
+    <p class="deus-dica">A luva vem equipada e liga sua magia automática.</p>
+  </section>
+
+  <section class="inicio-caixa deus bencao" id="deusBencao" hidden>
+    <div class="deus-figura" aria-hidden="true">
+      <span class="deus-raios"></span>
+      <span class="deus-simbolo" id="bencaoSimbolo">🔥</span>
+    </div>
+    <p class="deus-fala" id="bencaoFala" aria-live="polite"></p>
+    <p class="deus-sub">Sua jornada começa agora.</p>
+  </section>
+
+  <section class="inicio-caixa menu-pausa" id="menuPausa" hidden>
+    <p class="inicio-eyebrow">⏸ PARTIDA PAUSADA</p>
+    <h2 class="inicio-logo menu-logo">Menu</h2>
+    <p class="inicio-sub">Seu progresso está guardado. Volte quando quiser.</p>
+    <div class="menu-resumo">
+      <div><span>RODADA</span><strong id="menuRodada">1</strong></div>
+      <div><span>MOEDAS</span><strong id="menuMoedas">0</strong></div>
+      <div><span>CONQUISTAS</span><strong id="menuConquistas">0/0</strong></div>
+    </div>
+    <div class="barra conquistas-bar"><div id="menuAchievProgresso"></div></div>
+    <div id="menuAchievList" class="achiev-list menu-achiev-list"></div>
+    <div class="menu-acoes">
+      <button class="inicio-btn" id="btnContinuar" type="button">▶ CONTINUAR</button>
+      <button class="secundario" id="btnMenuConfig" type="button">⚙ CONFIGURAÇÕES</button>
+    </div>
+    <p class="inicio-dica"><kbd>ESC</kbd> ou <kbd>ENTER</kbd> volta para a luta.</p>
+  </section>
+</div>
+
+<div id="estrelas"></div>
+<div id="orbs" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div id="cursorTrail" aria-hidden="true"></div>
+<canvas id="confete"></canvas>
+<div id="flash"></div>
+<div id="mensagem"></div>
+<div id="floaters"></div>
+<div id="eventos" aria-live="polite"></div>
+<div class="achiev-toast" id="achievToast" role="status" aria-live="polite"></div>
+<div id="seloCapeta">✝</div>
+<button id="somBtn" class="som-btn" title="Ativar/desativar som">🔊</button>
+<button id="sairCapeta" class="sair-capeta">⛪ SAIR DA FASE</button>
+
+<header class="topbar" id="topbar">
+  <div class="topbar-item"><span>NÍVEL</span><strong id="topNivel">1</strong></div>
+  <div class="topbar-item"><span>🪙 MOEDAS</span><strong id="topMoedas">0</strong></div>
+  <div class="topbar-item"><span>⚔️ CLIQUE</span><strong id="topPoder">1</strong></div>
+  <button class="top-btn" id="btnStats" title="Estatísticas">📊</button>
+  <button class="top-btn" id="btnSettings" title="Configurações">⚙️</button>
+  <button class="top-btn" id="btnFullscreen" title="Tela cheia">⛶</button>
+  <button class="top-btn" id="btnPause" title="Pausar a luta — a loja continua (P)" aria-pressed="false">⏸</button>
+  <button class="top-btn" id="btnMenu" title="Menu — conquistas e configurações (Esc)">☰</button>
+</header>
+
+<div class="layout">
+
+  <main class="painel" id="painel">
+    <div class="cabecalho">
+      <p class="eyebrow"><span></span> ARENA DE MONSTROS <span></span></p>
+      <h1 class="titulo">Click Glow</h1>
+      <p class="subtitulo">CLIQUE • ACERTE • DERROTE • EVOLUA</p>
+      <div class="divisor" aria-hidden="true"><i></i></div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-card">
+        <span><b class="hud-icone">✦</b> PONTOS</span>
+        <strong class="pontos" id="pontos">0</strong>
+        <small>META DA RODADA</small>
+      </div>
+      <div class="hud-card moeda-card">
+        <span><b class="hud-icone">🪙</b> MOEDAS</span>
+        <strong id="moedas">0</strong>
+        <small>TESOURO</small>
+      </div>
+      <div class="hud-card rolls-card">
+        <span><b class="hud-icone">🎲</b> ROLLS</span>
+        <strong id="rollsTopo">3</strong>
+        <small>DISPONÍVEIS</small>
+      </div>
+    </div>
+
+    <div class="nivel" id="nivel">NÍVEL 1 · BRILHO COMUM</div>
+
+    <section class="arena" id="arena">
+      <div class="cenario" aria-hidden="true">
+        <div class="ceu-cenario"></div>
+        <div class="lua-cenario"></div>
+        <div class="estrelas-cenario"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="montanhas-cenario"></div>
+        <div class="arco-cenario"></div>
+        <div class="ruinas-cenario"><i></i><i></i><i></i><i></i></div>
+        <div class="tochas-cenario"><i></i><i></i></div>
+        <div class="nevoa-cenario"></div>
+        <div class="chao-cenario"><div class="runas-cenario"></div></div>
+      </div>
+      <div class="brilho-costas"></div>
+      <div class="combo" id="combo">
+        <span>COMBO</span><strong id="comboNum">0</strong><small id="comboMult">x1</small>
+      </div>
+      <div class="frenesi-badge" id="frenesiBadge" hidden>💉 <b>FRENESI</b> <span id="frenesiTempo">60</span>s</div>
+      <div class="pausa-badge" id="pausaBadge" hidden>⏸ LUTA PAUSADA · LOJA ABERTA</div>
+      <div class="personagens">
+        <div class="lado">
+          <div class="heroi" id="heroi"></div>
+          <span class="quem">VOCÊ</span>
+        </div>
+        <div class="vs">⚡</div>
+        <div class="lado">
+          <div class="monstro" id="monstro">👾</div>
+          <span class="quem">INIMIGO</span>
+        </div>
+      </div>
+      <div class="boss-fala" id="bossFala"></div>
+      <h2 class="nome-monstro" id="nomeMonstro">Slime de Bolso</h2>
+      <p class="info-monstro" id="infoMonstro">Monstro nível 1 · 10 de vida</p>
+
+      <div class="barra hp"><div id="hpBar"></div></div>
+      <div class="barra-legenda"><span>♥ VIDA DO MONSTRO</span><span id="hpText" aria-live="polite">10 / 10</span></div>
+
+      <div class="barra progresso"><div id="progresso"></div></div>
+      <div class="barra-legenda"><span>✦ PROGRESSO DA RODADA</span><span id="progressoText">0 / 100</span></div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><span>🎯 ACERTO</span><strong id="acerto">0%</strong></div>
+      <div class="stat"><span>💥 CRÍTICO</span><strong id="crit">0%</strong></div>
+      <div class="stat"><span>⚔️ DANO</span><strong id="dano">1 (+1)</strong></div>
+      <div class="stat" title="Mais sorte = itens melhores na loja e mais seringas de frenesi"><span>🍀 SORTE</span><strong id="sorte">12%</strong></div>
+    </div>
+
+    <button id="botao">
+      <span class="botao-texto">ATACAR <em>⚔️</em></span>
+      <span class="atalho">ESPAÇO</span>
+    </button>
+    <p class="prova-aviso" id="provaAviso" hidden>PROVAÇÃO: apenas o clique pode ajudar. Chegue a 100 pontos e vença o demônio.</p>
+    <p class="dica">Clique ou aperte <kbd>ESPAÇO</kbd> para lançar sua adaga. Erros não pontuam!</p>
+
+    <div class="rota">
+      <div class="rota-topo">
+        <span>🗺️ ROTA DOS MONSTROS</span>
+        <small id="rotaInfo">FALTAM 100 PTS PARA O BOSS</small>
+      </div>
+      <div class="rota-trilha" id="rotaTrilha"></div>
+    </div>
+
+    <div class="painel-rodape">
+      <span>⚔️ MONSTROS <b id="monstrosMortos">0</b></span>
+      <span>👑 BOSSES <b id="bossesMortos">0</b></span>
+      <span>🔥 RECORDE <b id="recordeCombo">0</b> COMBO</span>
+    </div>
+  </main>
+
+  <aside class="coluna">
+
+    <section class="caixa loja">
+      <div class="caixa-topo">
+        <h2>🛒 LOJA</h2>
+        <span class="saldo">🪙 <b id="saldoLoja">0</b></span>
+      </div>
+      <p class="caixa-dica">Acerto, crítico, sorte e luvas elementais. Compre uma raridade para aposentar as inferiores daquela peça — sorte alta traz raridades melhores.</p>
+      <div id="itensLoja" class="grade-loja"></div>
+      <button class="secundario" id="rerolar">🎲 Rolar itens (<b id="rolls">3</b> rolls)</button>
+    </section>
+
+    <section class="caixa magia" id="magia">
+      <div class="caixa-topo">
+        <h2>🔮 MAGIA</h2>
+        <span class="saldo" id="magiaNivel">NÍVEL 1</span>
+      </div>
+      <p class="caixa-dica">Compre uma luva: o poder liga sozinho e troca ao derrotar o monstro.</p>
+      <div class="elementos">
+        <span class="elem-btn" data-poder="fogo">🔥 FOGO</span>
+        <span class="elem-btn" data-poder="gelo">❄️ GELO</span>
+        <span class="elem-btn" data-poder="raio">⚡ RAIO</span>
+      </div>
+      <div class="magia-linha">
+        <span id="magiaElemento">🔥 FOGO</span>
+        <strong id="magiaDps">4/s</strong>
+      </div>
+      <div class="barra magia-barra"><div id="magiaProgresso"></div></div>
+      <p class="magia-info" id="magiaInfo">Compre uma luva na loja para ligar o poder automaticamente</p>
+      <div class="magia-acoes">
+        <div class="magia-auto" id="magiaAtivar">⏳ SEM LUVA</div>
+        <button class="secundario upgrade" id="magiaUpgrade">⬆️ UPGRADE 🪙 <b id="magiaCusto">75</b></button>
+      </div>
+    </section>
+
+    <section class="caixa build">
+      <div class="caixa-topo">
+        <h2>🛡️ SEU BUILD</h2>
+        <span class="saldo" id="raridadeBuild">VAZIA</span>
+      </div>
+      <p class="caixa-dica">Comece do zero: compre itens na loja. 5 épicos sobrando → 🌈 RADIANTE.</p>
+      <div id="slots" class="grade-slots"></div>
+      <h3 class="subtitulo-caixa">INVENTÁRIO <small>(clique para equipar)</small></h3>
+      <div id="inventario" class="inventario"></div>
+    </section>
+
+    <section class="caixa conquistas">
+      <div class="caixa-topo">
+        <h2>🏆 CONQUISTAS & BOOSTS</h2>
+        <span class="saldo" id="achievCount">0/8</span>
+      </div>
+      <div class="barra conquistas-bar"><div id="achievProgresso"></div></div>
+      <p class="achiev-resumo" id="achievResumo">Próxima: 🛒 Primeira Compra</p>
+      <div id="achievList" class="achiev-list"></div>
+      <div class="boosts" id="boosts"></div>
+      <button class="secundario ver-trofus" id="btnVerTrofus">🏆 VER TODAS AS CONQUISTAS</button>
+    </section>
+
+  </aside>
+
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal">
+    <button class="modal-fechar" id="fecharOverlay" title="Fechar">✕</button>
+    <h2 id="overlayTitulo">PAINEL</h2>
+    <div id="overlayConteudo"></div>
+  </div>
+</div>
+
+<nav class="nav-inferior" id="navInferior" aria-label="Navegação">
+  <button data-nav="home" class="ativo">🏠 <span>Início</span></button>
+  <button data-nav="shop">🛒 <span>Loja</span></button>
+  <button data-nav="stats">📊 <span>Stats</span></button>
+  <button data-nav="achievements">🏆 <span>Trofus</span></button>
+  <button data-nav="premium">💎 <span>Premium</span></button>
+</nav>
+
+<script src="game.js?v=21"></script>
+</body>
+</html>
