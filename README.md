@@ -13,6 +13,19 @@ Jogo de clique com desafio inicial, bênção elemental, loja, raridades e bosse
 - **☰** na topbar (ou **ESC**) abre o menu de pausa com suas conquistas.
 - **ESPAÇO** ataca e **P** pausa a luta.
 
+## Progressão e save (v43)
+
+- **Rolls**: você guarda no máximo **12 🎲**. Matar monstros, bosses e romper
+  100 pontos continua rendendo rolls; o excedente simplesmente não é contado.
+- **Pity**: depois de **8 rolagens sem item raro ou melhor**, a próxima rerolagem
+  garante pelo menos um item **raro** na primeira posição da loja.
+- **Offline**: o tempo fora rende moedas, mortes e até **6 rolls** (respeitando o
+  teto). O painel da magia mostra os segundos restantes da recarga.
+- **Save**: recarregar a página nunca herda magia ativa — ela volta desligada e
+  com a recarga reconstruída. O progresso da primeira ativação (8s) e o nível da
+  magia são preservados. Saves antigos ou corrompidos são saneados na carga:
+  itens inválidos são descartados e o HP zerado renasce cheio.
+
 ## Arquivos
 
 - `index.html` — estrutura da página

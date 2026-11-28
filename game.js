@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '41';
+const ASSETS_V = '43';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -743,6 +743,8 @@ let pontos = 0;
 let rodada = 1;
 let moedas = 0;
 let rolls = 3;
+const ROLLS_MAX = 12; // teto de rolls: evita estoque infinito e mantém a loja tensa
+let rollsSemRaro = 0; // pity: 8 rolagens sem raro+ garante ao menos raro
 let mobNivel = 1;
 let hp = 10;
 let hpMax = 10;
@@ -1710,7 +1712,7 @@ function renderMagia() {
   magiaNivelEl.textContent = 'NÍVEL ' + magia.nivel;
   magiaDpsEl.textContent = luva ? Math.round(dpsMagia() * e.mult) + '/s' : '—/s';
   magiaInfoEl.textContent = luva
-    ? `${e.emoji} ${e.nome} · ${e.descricao} · ${luva.nome}${magia.ativada ? ' · ATIVO AUTOMÁTICO' : magiaEmCooldown() ? ` · RECARGANDO ${cooldownMagia()}s` : ''}`
+    ? `${e.emoji} ${e.nome} · ${e.descricao} · ${luva.nome}${magia.ativada ? ' · ATIVO AUTOMÁTICO' : magiaEmCooldown() ? ` · RECARGANDO ${Math.ceil((magia.cooldownAte - performance.now()) / 1000)}s` : ''}`
     : 'Compre uma luva na loja para desbloquear e carregar o poder';
   magiaCustoEl.textContent = custoMagia();
   magiaAtivarBtn.textContent = magia.ativada
@@ -1739,13 +1741,31 @@ function renderTudo() {
 
 /* ---------- ações ---------- */
 
+// ganho de rolls com teto: devolve a quantidade realmente recebida (para o HUD)
+function ganharRolls(qtd) {
+  const antes = rolls;
+  rolls = Math.min(ROLLS_MAX, rolls + qtd);
+  return rolls - antes;
+}
+
 function rerolarLoja() {
   if (rolls < 1) {
     mostrarMensagem('SEM ROLLS! MATE UM MONSTRO 🎲');
     return false;
   }
   rolls--;
-  loja = [novoItem(), novoItem(), novoItem()];
+  const pity = rollsSemRaro >= 8;
+  loja = [0, 1, 2].map(k => {
+    if (pity && k === 0) {
+      const tipo = tipoAleatorio();
+      const rar = RARIDADES[Math.max(2, raridadeMinSlot(tipo.slot))];
+      rollsSemRaro = 0;
+      return criarItem(tipo, rar, tipo.slot === 'luva' ? elementoDaLoja() : null);
+    }
+    const item = novoItem();
+    rollsSemRaro = ['raro', 'epico', 'radiante'].includes(item.rar) ? 0 : rollsSemRaro + 1;
+    return item;
+  });
   renderHUD();
   renderLoja();
   return true;
@@ -2041,14 +2061,14 @@ function matarMonstro(bonusMoedas) {
   estatisticas.moedasGanhas += recompensa;
   estatisticas.mortes++;
   if (eraBoss) estatisticas.bosses++;
-  rolls += ganhoRolls;
+  const rollsRecebidos = ganharRolls(ganhoRolls);
   flutuante(`+${recompensa} 🪙`, '#e0bb74', 100);
-  flutuante(`+${ganhoRolls} 🎲`, '#9fb4c7', -100);
+  if (rollsRecebidos > 0) flutuante(`+${rollsRecebidos} 🎲`, '#9fb4c7', -100);
   piscar();
   estourarConfete(eraBoss ? 240 : 110);
   mostrarMensagem(eraBoss
-    ? `👑 BOSS DERROTADO! +${recompensa} 🪙 +${ganhoRolls} 🎲`
-    : `MONSTRO DERROTADO! +${recompensa} 🪙 +1 🎲`);
+    ? `👑 BOSS DERROTADO! +${recompensa} 🪙${rollsRecebidos ? ` +${rollsRecebidos} 🎲` : ''}`
+    : `MONSTRO DERROTADO! +${recompensa} 🪙${rollsRecebidos ? ` +${rollsRecebidos} 🎲` : ''}`);
   tocarSom('moeda');
   if (eraBoss) bossAtivo = false;
   mobNivel++;
@@ -2066,15 +2086,15 @@ function resetarPontos() {
   magia.ativaAgora = false;
   document.querySelectorAll('.magia-efeito').forEach(n => n.remove());
   renderMagia();
-  rolls += 3;
+  const rollsGanhos = ganharRolls(3);
   if (rollsEl) rollsEl.textContent = rolls;
   if (rerolarBtn) rerolarBtn.disabled = false;
-  flutuante('+3 🎲', '#cbb7e8', -120);
+  if (rollsGanhos > 0) flutuante(`+${rollsGanhos} 🎲`, '#cbb7e8', -120);
   piscar();
   estourarConfete(260);
   mostrarMensagem(provacaoAtiva
     ? '100! O BOSS DEMÔNIO DESPERTOU 😈'
-    : '100! +3 ROLLS — BOSS CHEGANDO! 👑');
+    : `100!${rollsGanhos ? ` +${rollsGanhos} ROLLS` : ' ROLLS NO TETO'} — BOSS CHEGANDO! 👑`);
   tocarSom('reset');
   pontosEl.textContent = '100';
   progressoEl.style.width = '100%';
@@ -2497,6 +2517,7 @@ function iniciarJogo() {
     document.body.classList.toggle('provacao-ativa', provacaoAtiva);
     el('provaAviso').hidden = !provacaoAtiva;
     el('btnPause').style.display = provacaoAtiva ? 'none' : '';
+    sincronizarMagia(); // retoma com recarga, nunca com magia ativa herdada do save
     renderTudo();
     renderRota();
     atualizarTituloAba();
@@ -2705,13 +2726,14 @@ function salvarJogo() {
   if (_resetandoSave || !jogoIniciado) return;
   try {
     const dados = {
-      pontos, rodada, moedas, rolls, mobNivel, hp, hpMax, bossAtivo,
+      pontos, rodada, moedas, rolls, rollsSemRaro, mobNivel, hp, hpMax, bossAtivo,
       provacaoAtiva, demonioProva, provaConcluida, bencaoConcedida, elementoEscolhido,
       idItem, inventario, equipados, loja, raridadeMinima, comboMax,
       estatisticas, conquistas: [...conquistas],
       magia: {
-        nivel: magia.nivel, elemento: magia.elemento, ativada: magia.ativada,
-        primeiraAtivacao: magia.primeiraAtivacao
+        nivel: magia.nivel, elemento: magia.elemento,
+        primeiraAtivacao: magia.primeiraAtivacao,
+        cooldownMs: magiaEmCooldown() ? Math.max(0, magia.cooldownAte - performance.now()) : 0
       },
       ultimoSave: Date.now()
     };
@@ -2730,15 +2752,47 @@ function aplicarProgressoOffline(ultimoSave) {
   const mortesOff = Math.max(0, Math.floor(danoTotal / Math.max(10, hpMax)));
   const recompensaPorMorte = 8 + mobNivel * 4;
   const moedasOff = Math.max(1, mortesOff * recompensaPorMorte + Math.floor(segs * 0.15));
+  const rollsOff = Math.min(6, mortesOff); // offline também alimenta a loja, com teto
 
   moedas += moedasOff;
+  ganharRolls(rollsOff);
   estatisticas.moedasGanhas += moedasOff;
   estatisticas.mortes += mortesOff;
   const mins = Math.floor(segs / 60);
   const tempoTxt = mins >= 1 ? `${mins}min` : `${segs}s`;
   setTimeout(() => {
-    mostrarMensagem(`🌙 OFFLINE (${tempoTxt}): +${formatarCompacto(moedasOff)} 🪙${mortesOff > 0 ? ` · ${mortesOff} monstros` : ''}`);
+    mostrarMensagem(`🌙 OFFLINE (${tempoTxt}): +${formatarCompacto(moedasOff)} 🪙${rollsOff ? ` · +${rollsOff} 🎲` : ''}${mortesOff > 0 ? ` · ${mortesOff} monstros` : ''}`);
   }, 600);
+}
+
+// itens de save antigo/corrompido são normalizados antes de encostar no HUD
+function itemSalvoValido(i) {
+  if (!i || typeof i !== 'object') return false;
+  if (!TIPOS.some(t => t.slot === i.slot)) return false;
+  if (!RARIDADES.some(r => r.id === i.rar)) return false;
+  if (!Number.isFinite(Number(i.bonus)) || Number(i.bonus) < 1) return false;
+  if (i.slot === 'luva' && !PODERES_LUVA.some(p => p.id === i.poder)) return false;
+  return true;
+}
+
+function normalizarItemSalvo(i) {
+  if (!itemSalvoValido(i)) return null;
+  const tipo = TIPOS.find(t => t.slot === i.slot);
+  const rar = RARIDADES.find(r => r.id === i.rar);
+  return {
+    id: Number(i.id) || idItem++,
+    slot: i.slot,
+    nome: typeof i.nome === 'string' ? i.nome : tipo.nome,
+    emoji: typeof i.emoji === 'string' ? i.emoji : tipo.emoji,
+    icone: tipo.icone,
+    stat: tipo.stat,
+    poder: i.slot === 'luva' ? i.poder : null,
+    bonus: Math.max(1, Math.floor(Number(i.bonus))),
+    rar: rar.id,
+    rarNome: rar.nome,
+    cor: rar.cor,
+    preco: Math.max(0, Number(i.preco) || 0)
+  };
 }
 
 function carregarJogo() {
@@ -2748,36 +2802,60 @@ function carregarJogo() {
     const d = JSON.parse(bruto);
     if (typeof d !== 'object' || !d) return false;
 
-    pontos = Number(d.pontos) || 0;
-    rodada = Number(d.rodada) || 1;
-    moedas = Number(d.moedas) || 0;
-    rolls = Number(d.rolls ?? 3);
-    mobNivel = Number(d.mobNivel) || 1;
-    hpMax = Number(d.hpMax) || 10;
-    hp = Math.min(hpMax, Math.max(1, Number(d.hp) || hpMax));
+    const num = (v, padrao, min = -Infinity, max = Infinity) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : padrao;
+    };
+
+    pontos = num(d.pontos, 0, 0, 100);
+    rodada = Math.max(1, Math.floor(num(d.rodada, 1, 1, 100000)));
+    moedas = Math.max(0, Math.floor(num(d.moedas, 0, 0)));
+    rolls = Math.min(ROLLS_MAX, Math.max(0, Math.floor(num(d.rolls, 3, 0, ROLLS_MAX))));
+    rollsSemRaro = Math.min(8, Math.max(0, Math.floor(num(d.rollsSemRaro, 0, 0, 8))));
+    mobNivel = Math.max(1, Math.floor(num(d.mobNivel, 1, 1, 100000)));
+    hpMax = Math.max(1, Math.floor(num(d.hpMax, 10, 1)));
+    const hpSalvo = Math.floor(num(d.hp, hpMax, 0));
+    hp = hpSalvo > 0 ? Math.min(hpMax, hpSalvo) : hpMax; // hp zerado retorna ao monstro cheio
     bossAtivo = !!d.bossAtivo;
     provacaoAtiva = !!d.provacaoAtiva;
     demonioProva = !!d.demonioProva;
     provaConcluida = !!d.provaConcluida;
     bencaoConcedida = !!d.bencaoConcedida;
-    elementoEscolhido = d.elementoEscolhido || 'fogo';
-    idItem = Number(d.idItem) || 1;
-    inventario = Array.isArray(d.inventario) ? d.inventario : [];
-    equipados = d.equipados && typeof d.equipados === 'object' ? d.equipados : {};
+    elementoEscolhido = ELEMENTOS[d.elementoEscolhido] ? d.elementoEscolhido : 'fogo';
+    idItem = Math.max(1, Math.floor(num(d.idItem, 1, 1)));
+    inventario = (Array.isArray(d.inventario) ? d.inventario : []).map(normalizarItemSalvo).filter(Boolean);
+    equipados = {};
+    const eqBruto = d.equipados && typeof d.equipados === 'object' ? d.equipados : {};
+    for (const t of TIPOS) {
+      const i = normalizarItemSalvo(eqBruto[t.slot]);
+      if (i) equipados[t.slot] = i;
+    }
+    idItem = Math.max(idItem, ...inventario.map(i => i.id + 1), ...Object.values(equipados).map(i => i.id + 1));
     buildFoco = null;
-    loja = Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()];
+    loja = (Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()])
+      .map(i => (i === null ? null : normalizarItemSalvo(i)));
+    if (loja.every(i => !i)) loja = [novoItem(), novoItem(), novoItem()];
     ajustarLojaBencao(); // save antigo não pode reabrir luva antes da dádiva nem fora do elemento
-    if (d.raridadeMinima && typeof d.raridadeMinima === 'object') raridadeMinima = d.raridadeMinima;
-    comboMax = Number(d.comboMax) || 0;
+    if (d.raridadeMinima && typeof d.raridadeMinima === 'object') {
+      const min = {};
+      for (const t of TIPOS) min[t.slot] = Math.min(4, Math.max(0, Math.floor(num(d.raridadeMinima[t.slot], 0, 0, 4))));
+      raridadeMinima = min;
+    }
+    comboMax = Math.max(0, Math.floor(num(d.comboMax, 0, 0)));
     if (d.estatisticas && typeof d.estatisticas === 'object') Object.assign(estatisticas, d.estatisticas);
     conquistas.clear();
     if (Array.isArray(d.conquistas)) d.conquistas.forEach(id => conquistas.add(id));
     if (d.magia && typeof d.magia === 'object') {
-      magia.nivel = Number(d.magia.nivel) || 1;
-      magia.elemento = d.magia.elemento || 'fogo';
-      magia.ativada = !!d.magia.ativada;
-      magia.primeiraAtivacao = !!d.magia.primeiraAtivacao || magia.ativada;
-      magia.ate = magia.ativada ? Infinity : 0;
+      magia.nivel = Math.min(99, Math.max(1, Math.floor(num(d.magia.nivel, 1, 1, 99))));
+      magia.elemento = ELEMENTOS[d.magia.elemento] ? d.magia.elemento : 'fogo';
+      magia.primeiraAtivacao = !!d.magia.primeiraAtivacao;
+      // nunca restaurar magia ativa: o monstro recomeça e a recarga também
+      magia.ativada = false;
+      magia.ate = 0;
+      magia.acumulado = 0;
+      magia.ativaAgora = false;
+      const cd = Math.min(8000, Math.max(0, num(d.magia.cooldownMs, 0, 0, 8000)));
+      magia.cooldownAte = cd > 0 ? performance.now() + cd : 0;
     }
 
     aplicarProgressoOffline(d.ultimoSave);
@@ -2789,9 +2867,7 @@ function carregarJogo() {
 
 function resetarSave() {
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
-  // impede que beforeunload/intervalo regravem o save apagado durante o reload
-  addEventListener('beforeunload', salvarJogo, { once: true, capture: true });
-  _resetandoSave = true;
+  _resetandoSave = true; // o listener beforeunload existente não regrava o save apagado
   location.reload();
 }
 
