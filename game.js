@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '43';
+const ASSETS_V = '44';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -1222,11 +1222,27 @@ function registrarRaridade(item) {
   if (alvo > raridadeMinSlot(item.slot)) raridadeMinima[item.slot] = alvo;
 }
 
+// reposição da mesma peça: nunca troca a categoria nem oferece tier aposentado
+function novoItemDoSlot(slot) {
+  const tipo = TIPOS.find(t => t.slot === slot) || tipoAleatorio();
+  return criarItem(tipo, raridadePeso(slot), tipo.slot === 'luva' ? elementoDaLoja() : null);
+}
+
 // tira da loja atual os itens daquela peça abaixo da nova raridade mínima
 function limparLojaAbaixo(slot) {
   const min = raridadeMinSlot(slot);
   if (!min) return;
-  loja = loja.map(i => (i && i.slot === slot && indiceRaridade(i.rar) < min) ? novoItem() : i);
+  let mudou = false;
+  loja = loja.map(i => {
+    if (!i || i.slot !== slot || indiceRaridade(i.rar) >= min) return i;
+    mudou = true;
+    return novoItemDoSlot(slot);
+  });
+  return mudou;
+}
+
+function limparLojaPorTier() {
+  for (const t of TIPOS) limparLojaAbaixo(t.slot);
 }
 
 function raridadePeso(slot) {
@@ -1261,9 +1277,10 @@ function ajustarLojaBencao() {
     if (!i) return i;
     if (!bencaoConcedida) return i.slot === 'luva' ? novoItem() : i;
     if (i.slot !== 'luva' || i.poder === elementoEscolhido) return i;
-    const rar = RARIDADES.find(r => r.id === i.rar) || RARIDADES[0];
-    return criarItem(tipoLuva, rar, elementoEscolhido);
+    const idx = Math.max(indiceRaridade(i.rar), raridadeMinSlot('luva'));
+    return criarItem(tipoLuva, RARIDADES[idx], elementoEscolhido);
   });
+  limparLojaPorTier();
 }
 
 function novoItem() {
@@ -1780,6 +1797,11 @@ function comprar(id) {
   if (!item || moedas < item.preco) return;
   // luva só depois da dádiva de Deus; e nunca fora do elemento escolhido
   if (item.slot === 'luva' && (!bencaoConcedida || item.poder !== elementoEscolhido)) return;
+  // tier aposentado não volta: se o slot já subiu, compra inferior é barrada
+  if (indiceRaridade(item.rar) < raridadeMinSlot(item.slot)) {
+    mostrarMensagem(`SLOT JÁ EM ${RARIDADES[raridadeMinSlot(item.slot)].nome.toUpperCase()} — TIER INFERIOR BLOQUEADO`);
+    return;
+  }
 
   moedas -= item.preco;
   inventario.push(item);
@@ -2835,12 +2857,12 @@ function carregarJogo() {
     loja = (Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()])
       .map(i => (i === null ? null : normalizarItemSalvo(i)));
     if (loja.every(i => !i)) loja = [novoItem(), novoItem(), novoItem()];
-    ajustarLojaBencao(); // save antigo não pode reabrir luva antes da dádiva nem fora do elemento
     if (d.raridadeMinima && typeof d.raridadeMinima === 'object') {
       const min = {};
       for (const t of TIPOS) min[t.slot] = Math.min(4, Math.max(0, Math.floor(num(d.raridadeMinima[t.slot], 0, 0, 4))));
       raridadeMinima = min;
     }
+    ajustarLojaBencao(); // save antigo: nada de luva antes da dádiva, fora do elemento ou abaixo do tier
     comboMax = Math.max(0, Math.floor(num(d.comboMax, 0, 0)));
     if (d.estatisticas && typeof d.estatisticas === 'object') Object.assign(estatisticas, d.estatisticas);
     conquistas.clear();
