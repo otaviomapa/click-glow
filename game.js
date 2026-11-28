@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '45';
+const ASSETS_V = '46';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -587,17 +587,17 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
-// o pack nomeia cada preview pela peça que ele representa
+// sem build vale o retrato cheio original; os presets modulares só entram com peça equipada
 const BUILDS_HEROI = {
   heroi: Object.freeze({
-    base: 'sprite_request/hero/presets/base.webp', lamina: 'sprite_request/hero/presets/lamina.webp',
+    base: 'personagens/heroi-cruzado.webp', lamina: 'sprite_request/hero/presets/lamina.webp',
     mira: 'sprite_request/hero/presets/mira.webp', amuleto: 'sprite_request/hero/presets/amuleto.webp',
     fogo: 'sprite_request/hero/presets/fogo.webp', gelo: 'sprite_request/hero/presets/gelo.webp',
     raio: 'sprite_request/hero/presets/raio.webp', talisma: 'sprite_request/hero/presets/talisma.webp',
     radiante: 'sprite_request/hero/presets/radiante.webp'
   }),
   antimodelo: Object.freeze({
-    base: 'sprite_request/antimodelo_666/presets/base.webp', lamina: 'sprite_request/antimodelo_666/presets/lamina.webp',
+    base: 'personagens/antimodelo-666.webp', lamina: 'sprite_request/antimodelo_666/presets/lamina.webp',
     mira: 'sprite_request/antimodelo_666/presets/mira.webp', amuleto: 'sprite_request/antimodelo_666/presets/amuleto.webp',
     fogo: 'sprite_request/antimodelo_666/presets/fogo.webp', gelo: 'sprite_request/antimodelo_666/presets/gelo.webp',
     raio: 'sprite_request/antimodelo_666/presets/raio.webp', talisma: 'sprite_request/antimodelo_666/presets/talisma.webp',
@@ -621,8 +621,8 @@ function buildVisualAtual() {
 }
 
 const HEROI_RESERVA = {
-  heroi: 'personagens/hero_builds/base.webp',
-  antimodelo: 'personagens/anti_builds/base.webp'
+  heroi: 'personagens/heroi-cruzado.webp',
+  antimodelo: 'personagens/antimodelo-666.webp'
 };
 
 function renderHeroi() {
