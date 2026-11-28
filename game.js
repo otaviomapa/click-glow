@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '44';
+const ASSETS_V = '45';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -541,7 +541,21 @@ function bloquearDanoIntro() {
   return true;
 }
 
-function animarChegadaBoss(primeiraVez = false) {
+const FALAS_BOSS = {
+  lucifer: 'EU SOU LÚCIFER. O DESAFIO COMEÇA AGORA...',
+  lilith: 'EU SOU LILITH. A NOITE É MEU REINO...',
+  baphomet: 'EU SOU BAPHOMET. AJOELHE-SE, MORTAL...'
+};
+
+function falaDoBoss() {
+  const nome = (nomeMonstroEl?.textContent || '').toUpperCase();
+  if (nome.includes('LÚCIFER')) return FALAS_BOSS.lucifer;
+  if (nome.includes('LILITH')) return FALAS_BOSS.lilith;
+  return FALAS_BOSS.baphomet;
+}
+
+// todo boss se apresenta: fala própria e ~3s intocável, sem custo pro jogador
+function animarChegadaBoss() {
   monstroEl.classList.remove('chegando', 'apresentacao');
   void monstroEl.offsetWidth;
   monstroEl.classList.add('chegando');
@@ -554,29 +568,22 @@ function animarChegadaBoss(primeiraVez = false) {
     fala.classList.remove('mostrar');
     void fala.offsetWidth;
     fala.classList.add('mostrar');
-    const texto = primeiraVez
-      ? 'EU SOU LÚCIFER. O DESAFIO COMEÇA AGORA...'
-      : 'SATAN IS MY LORD HAHAHAHA';
+    const texto = falaDoBoss();
     let i = 0;
-    const passo = primeiraVez ? 78 : 45;
     tipadorBoss = setInterval(() => {
       fala.textContent = texto.slice(0, ++i);
       if (i >= texto.length) clearInterval(tipadorBoss);
-    }, passo);
-    setTimeout(() => fala.classList.remove('mostrar'), primeiraVez ? 5200 : 4500);
+    }, 78);
+    setTimeout(() => fala.classList.remove('mostrar'), 5200);
   }
 
-  if (primeiraVez) {
-    bossIntroAte = performance.now() + 3000;
-    monstroEl.classList.add('apresentacao');
-    setTimeout(() => monstroEl.classList.remove('apresentacao'), 3000);
-    mostrarMensagem('😈 O BOSS SE APRESENTA — AGUARDE O ATAQUE');
-  } else {
-    bossIntroAte = 0;
-  }
+  bossIntroAte = performance.now() + 3000;
+  monstroEl.classList.add('apresentacao');
+  setTimeout(() => monstroEl.classList.remove('apresentacao'), 3000);
+  mostrarMensagem('😈 O BOSS SE APRESENTA — AGUARDE O ATAQUE');
 
   piscar();
-  estourarConfete(primeiraVez ? 220 : 170);
+  estourarConfete(220);
   tocarSom('boss');
 }
 
@@ -750,7 +757,7 @@ let hp = 10;
 let hpMax = 10;
 let bossAtivo = false;
 let tipadorBoss = null;
-let bossIntroAte = 0; // apresentação do primeiro boss: sem dano enquanto a fala roda
+let bossIntroAte = 0; // apresentação de todo boss: sem dano enquanto a fala roda
 let _avisoIntroEm = 0;
 let resetando = false;
 let lutaPausada = false;
@@ -1518,6 +1525,7 @@ function atualizarMonstro(comAnimacao = false) {
   const fala = el('bossFala');
   if (fala) fala.classList.remove('mostrar');
   clearInterval(tipadorBoss);
+  bossIntroAte = 0; // apresentação anterior nunca vaza pro próximo monstro
   nomeMonstroEl.classList.toggle('chefe', bossAtivo);
   hpBar.parentElement.classList.toggle('chefe', bossAtivo);
   arena.classList.toggle('chefe', bossAtivo);
@@ -1528,8 +1536,8 @@ function atualizarMonstro(comAnimacao = false) {
     monstroEl.classList.add('chefe');
     monstroEl.classList.remove('acerto', 'erro');
     nomeMonstroEl.textContent = '😈 BOSS DEMÔNIO — LÚCIFER';
-    // primeira run: apresentação mais longa, com o boss intocável enquanto fala
-    if (comAnimacao) animarChegadaBoss(!provaConcluida);
+    // todo boss se apresenta com fala própria e fica intocável enquanto fala
+    if (comAnimacao) animarChegadaBoss();
   } else if (bossAtivo) {
     monstroEl.dataset.monster = 'boss';
     const nomeChefe = modoCapeta
@@ -1931,7 +1939,7 @@ function lancarAdaga(resultado) {
 let _impactosAtivos = 0;
 function aplicarImpacto(resultado, x, y) {
   if (lutaPausada) return;
-  // na primeira run o boss se apresenta: nada de dano enquanto a fala roda
+  // todo boss se apresenta: nada de dano enquanto a fala roda
   if (bloquearDanoIntro()) return;
   if (!resultado.acerto) {
     animarMonstro('erro');
