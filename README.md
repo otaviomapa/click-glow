@@ -75,8 +75,10 @@ Cada peça tem 5 raridades; o bônus final é `base × multiplicador da raridade
 
 ### Luvas elementais (3)
 
-Comprar uma luva define o poder da magia. Depois da bênção a loja só oferece
-luvas do elemento escolhido, e o poder liga sozinho quando a recarga termina:
+Comprar uma luva define o poder da magia. **Antes da dádiva de Deus a loja não
+vende luva nenhuma** (nem na oferta inicial, nem na rerolagem, nem na reposição
+de raridade); depois da bênção ela só oferece luvas do elemento escolhido, e o
+poder liga sozinho quando a recarga termina:
 
 | Poder | Emoji | Efeito |
 |-------|-------|--------|
