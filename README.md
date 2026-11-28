@@ -75,7 +75,8 @@ Cada peça tem 5 raridades; o bônus final é `base × multiplicador da raridade
 
 ### Luvas elementais (3)
 
-Comprar uma luva define o poder da magia, que liga sozinha ao atacar:
+Comprar uma luva define o poder da magia. Depois da bênção a loja só oferece
+luvas do elemento escolhido, e o poder liga sozinho quando a recarga termina:
 
 | Poder | Emoji | Efeito |
 |-------|-------|--------|
@@ -83,8 +84,10 @@ Comprar uma luva define o poder da magia, que liga sozinha ao atacar:
 | Gelo | ❄️ | +5% de acerto |
 | Raio | ⚡ | +5% de crítico |
 
-A magia pode ser turbinada com **UPGRADE** (custo `40 + nível × 35` moedas),
-aumentando o DPS (`2 + nível × 2` por segundo).
+A primeira recarga leva **8s**; as seguintes **4s**, com `-0,5s` por nível
+(mínimo `1,5s`). A barra mostra o progresso e o rótulo conta os segundos.
+A magia só pode ser turbinada com **UPGRADE** (custo `40 + nível × 35` moedas)
+depois de equipar uma luva; o nível aumenta o DPS (`2 + nível × 2` por segundo).
 
 ### Bênção de Deus (3 elementos)
 
@@ -120,6 +123,9 @@ Cavaleiro Possuído · Anjo Caído · Succubus · Espectro Sacro · Demônio Abi
 Lúcifer · Lilith · Baphomet.
 
 Os três últimos são **chefes** (boss da rodada, fase 666 e boss final).
+Na primeira run o Boss Demônio se apresenta por ~3s: fala digitada, brilho
+extra e nenhum dano (cliques e magia são ignorados). Nas próximas runs a
+chegada volta a ser rápida.
 
 ### Configurações
 

@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '38';
+const ASSETS_V = '39';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -524,8 +524,25 @@ function spriteMonstro(emoji, nome = '') {
   return html;
 }
 
-function animarChegadaBoss() {
-  monstroEl.classList.remove('chegando');
+function bossEmApresentacao() { return performance.now() < bossIntroAte; }
+
+function bloquearDanoIntro() {
+  if (!bossEmApresentacao()) return false;
+  const agora = performance.now();
+  if (agora - _avisoIntroEm > 650) {
+    _avisoIntroEm = agora;
+    flutuante('⏳ APRESENTAÇÃO', '#ffd447', 0);
+    monstroEl.classList.remove('sem-dano');
+    void monstroEl.offsetWidth;
+    monstroEl.classList.add('sem-dano');
+    clearTimeout(monstroEl._semDanoTimer);
+    monstroEl._semDanoTimer = setTimeout(() => monstroEl.classList.remove('sem-dano'), 420);
+  }
+  return true;
+}
+
+function animarChegadaBoss(primeiraVez = false) {
+  monstroEl.classList.remove('chegando', 'apresentacao');
   void monstroEl.offsetWidth;
   monstroEl.classList.add('chegando');
   setTimeout(() => monstroEl.classList.remove('chegando'), 1450);
@@ -537,16 +554,29 @@ function animarChegadaBoss() {
     fala.classList.remove('mostrar');
     void fala.offsetWidth;
     fala.classList.add('mostrar');
-    const texto = 'SATAN IS MY LORD HAHAHAHA';
+    const texto = primeiraVez
+      ? 'EU SOU LÚCIFER. O DESAFIO COMEÇA AGORA...'
+      : 'SATAN IS MY LORD HAHAHAHA';
     let i = 0;
+    const passo = primeiraVez ? 78 : 45;
     tipadorBoss = setInterval(() => {
       fala.textContent = texto.slice(0, ++i);
       if (i >= texto.length) clearInterval(tipadorBoss);
-    }, 45);
-    setTimeout(() => fala.classList.remove('mostrar'), 4500);
+    }, passo);
+    setTimeout(() => fala.classList.remove('mostrar'), primeiraVez ? 5200 : 4500);
   }
+
+  if (primeiraVez) {
+    bossIntroAte = performance.now() + 3000;
+    monstroEl.classList.add('apresentacao');
+    setTimeout(() => monstroEl.classList.remove('apresentacao'), 3000);
+    mostrarMensagem('😈 O BOSS SE APRESENTA — AGUARDE O ATAQUE');
+  } else {
+    bossIntroAte = 0;
+  }
+
   piscar();
-  estourarConfete(170);
+  estourarConfete(primeiraVez ? 220 : 170);
   tocarSom('boss');
 }
 
@@ -718,6 +748,8 @@ let hp = 10;
 let hpMax = 10;
 let bossAtivo = false;
 let tipadorBoss = null;
+let bossIntroAte = 0; // apresentação do primeiro boss: sem dano enquanto a fala roda
+let _avisoIntroEm = 0;
 let resetando = false;
 let lutaPausada = false;
 let jogoIniciado = false;
@@ -766,7 +798,13 @@ const ELEMENTOS = {
   gelo:  { nome: 'GELO',  emoji: '❄️', cor: '#7fb6cf', cor2: '#6f9ec4', mult: 1.00, descricao: '+5% de acerto' },
   raio:  { nome: 'RAIO',  emoji: '⚡', cor: '#e0c25a', cor2: '#f2f4f7', mult: 1.15, descricao: '+5% de crítico' }
 };
-let magia = { elemento: 'fogo', nivel: 1, ativada: false, ate: 0, acumulado: 0, ativaAgora: false };
+// primeira ativação demora mais; as seguintes são mais curtas e melhoram com o nível
+const MAGIA_COOLDOWN_INICIAL = 8;
+const MAGIA_COOLDOWN_PADRAO = 4;
+let magia = {
+  elemento: 'fogo', nivel: 1, ativada: false, ate: 0, acumulado: 0, ativaAgora: false,
+  cooldownAte: 0, primeiraAtivacao: false
+};
 
 /* ---------- efeitos visuais ---------- */
 
@@ -1204,18 +1242,25 @@ function raridadePeso(slot) {
 
 function tipoAleatorio() { return TIPOS[Math.floor(Math.random() * TIPOS.length)]; }
 
+// depois da bênção a loja só oferece o elemento escolhido pelo jogador
+function elementoDaLoja() {
+  if (bencaoConcedida && ELEMENTOS[elementoEscolhido]) return elementoEscolhido;
+  return PODERES_LUVA[Math.floor(Math.random() * PODERES_LUVA.length)].id;
+}
+
 function novoItem() {
   const tipo = tipoAleatorio();
-  const poder = tipo.slot === 'luva'
-    ? PODERES_LUVA[Math.floor(Math.random() * PODERES_LUVA.length)].id
-    : null;
+  const poder = tipo.slot === 'luva' ? elementoDaLoja() : null;
   return criarItem(tipo, raridadePeso(tipo.slot), poder);
 }
 
 // primeira oferta da loja sempre comum (a primeira compra do jogador)
 function novoItemComum() {
   const tipo = tipoAleatorio();
-  return criarItem(tipo, RARIDADES[0], tipo.slot === 'luva' ? PODERES_LUVA[0].id : null);
+  const poder = tipo.slot === 'luva'
+    ? (bencaoConcedida && ELEMENTOS[elementoEscolhido] ? elementoEscolhido : PODERES_LUVA[0].id)
+    : null;
+  return criarItem(tipo, RARIDADES[0], poder);
 }
 
 function bonusStat(stat) {
@@ -1243,7 +1288,7 @@ function sincronizarMagia() {
   if (magia.ativada) return; // poder travado enquanto o monstro está vivo
   if (!equipados.luva?.poder) return; // sem luva comprada, sem poder
   magia.elemento = poderDaLuva();
-  ativarMagia(); // liga sozinho: sem clicar, só atacar
+  iniciarCooldownMagia(); // recarrega antes de ligar: não é instantâneo
 }
 
 function taxaAcerto() {
@@ -1271,6 +1316,26 @@ function buildRaridade() {
 
 function dpsMagia() { return 2 + magia.nivel * 2; }
 function custoMagia() { return 40 + magia.nivel * 35; }
+
+// a primeira recarga é bem maior; cada nível reduz 0,5s das seguintes
+function cooldownMagia() {
+  const base = magia.primeiraAtivacao ? MAGIA_COOLDOWN_PADRAO : MAGIA_COOLDOWN_INICIAL;
+  return Math.max(1.5, base - (magia.nivel - 1) * 0.5);
+}
+function magiaEmCooldown() { return performance.now() < magia.cooldownAte; }
+
+function iniciarCooldownMagia() {
+  if (provacaoAtiva || resetando || magia.ativada || !equipados.luva?.poder) return;
+  if (magiaEmCooldown()) return;
+  magia.cooldownAte = performance.now() + cooldownMagia() * 1000;
+  renderMagia();
+}
+
+// upgrade só existe depois que o jogador tem a magia (luva equipada)
+function podeUpgradarMagia() {
+  if (!equipados.luva?.poder) return false;
+  return moedas >= custoMagia();
+}
 
 function criarEfeitoMagia() {
   document.querySelectorAll('.magia-efeito').forEach(n => n.remove());
@@ -1302,6 +1367,8 @@ function criarEfeitoMagia() {
 function ativarMagia() {
   if (provacaoAtiva || resetando || magia.ativada || hp <= 0) return;
   magia.ativada = true;
+  magia.cooldownAte = 0;
+  magia.primeiraAtivacao = true; // próximas recargas são mais curtas
   magia.ate = Infinity; // fica ativa até este monstro morrer
   magia.acumulado = 0;
   magia.ativaAgora = true;
@@ -1316,6 +1383,10 @@ function ativarMagia() {
 
 function upgradeMagia() {
   if (provacaoAtiva) { avisarProvacao(); return; }
+  if (!equipados.luva?.poder) {
+    mostrarMensagem('🔒 Compre uma luva para desbloquear a magia');
+    return;
+  }
   const custo = custoMagia();
   if (moedas < custo) return;
   moedas -= custo;
@@ -1328,7 +1399,18 @@ function upgradeMagia() {
 
 function atualizarMagiaBarra() {
   if (!magiaProgresso) return;
-  magiaProgresso.style.width = magia.ativada ? '100%' : '0%';
+  const restanteMs = magiaEmCooldown() ? magia.cooldownAte - performance.now() : 0;
+  const restante = Math.ceil(restanteMs / 1000);
+  const pct = magia.ativada ? 100
+    : restanteMs ? Math.max(0, 100 - (restanteMs / (cooldownMagia() * 1000)) * 100)
+    : 0;
+  magiaProgresso.style.width = pct.toFixed(1) + '%';
+  if (magiaAtivarBtn) {
+    magiaAtivarBtn.textContent = magia.ativada
+      ? '⚡ ATIVO AUTOMÁTICO'
+      : restanteMs ? `⏳ RECARGANDO ${restante}s`
+      : equipados.luva ? '⏳ AGUARDANDO MONSTRO' : '⏳ SEM LUVA';
+  }
 }
 
 let _ultimoTickMagia = Date.now();
@@ -1341,6 +1423,9 @@ function danoMagicoTick() {
   atualizarMagiaBarra();
   if (!jogoIniciado || lutaPausada) return;
 
+  // recarga terminou: agora sim a magia entra em campo sozinha
+  if (!magia.ativada && magia.cooldownAte && !magiaEmCooldown()) ativarMagia();
+
   if (magia.ativaAgora !== ativo) {
     magia.ativaAgora = ativo;
     if (!ativo) {
@@ -1349,6 +1434,7 @@ function danoMagicoTick() {
     }
   }
   if (!ativo || resetando || hp <= 0) return;
+  if (bossEmApresentacao()) return;
 
   const e = ELEMENTOS[magia.elemento];
   magia.acumulado += dpsMagia() * e.mult * dt;
@@ -1407,7 +1493,8 @@ function atualizarMonstro(comAnimacao = false) {
     monstroEl.classList.add('chefe');
     monstroEl.classList.remove('acerto', 'erro');
     nomeMonstroEl.textContent = '😈 BOSS DEMÔNIO — LÚCIFER';
-    if (comAnimacao) animarChegadaBoss();
+    // primeira run: apresentação mais longa, com o boss intocável enquanto fala
+    if (comAnimacao) animarChegadaBoss(!provaConcluida);
   } else if (bossAtivo) {
     monstroEl.dataset.monster = 'boss';
     const nomeChefe = modoCapeta
@@ -1502,7 +1589,12 @@ function atualizarCompras() {
     btn.title = item && moedas < item.preco ? `Faltam ${item.preco - moedas} moedas` : '';
     btn.closest('.item')?.classList.toggle('pode-comprar', !btn.disabled);
   });
-  if (magiaUpgradeBtn) magiaUpgradeBtn.disabled = moedas < custoMagia();
+  if (magiaUpgradeBtn) {
+    magiaUpgradeBtn.disabled = !podeUpgradarMagia();
+    magiaUpgradeBtn.title = !equipados.luva?.poder
+      ? 'Compre uma luva para desbloquear a magia'
+      : moedas < custoMagia() ? `Faltam ${custoMagia() - moedas} moedas` : '';
+  }
 }
 
 function renderHUD(comRota = true) {
@@ -1602,14 +1694,16 @@ function renderMagia() {
   magiaNivelEl.textContent = 'NÍVEL ' + magia.nivel;
   magiaDpsEl.textContent = luva ? Math.round(dpsMagia() * e.mult) + '/s' : '—/s';
   magiaInfoEl.textContent = luva
-    ? `${e.emoji} ${e.nome} · ${e.descricao} · ${luva.nome}${magia.ativada ? ' · ATIVO AUTOMÁTICO' : ''}`
-    : 'Compre uma luva na loja para ligar o poder automaticamente';
+    ? `${e.emoji} ${e.nome} · ${e.descricao} · ${luva.nome}${magia.ativada ? ' · ATIVO AUTOMÁTICO' : magiaEmCooldown() ? ` · RECARGANDO ${cooldownMagia()}s` : ''}`
+    : 'Compre uma luva na loja para desbloquear e carregar o poder';
   magiaCustoEl.textContent = custoMagia();
   magiaAtivarBtn.textContent = magia.ativada
     ? '⚡ ATIVO AUTOMÁTICO'
     : luva ? '⏳ AGUARDANDO MONSTRO' : '⏳ SEM LUVA';
-  magiaUpgradeBtn.disabled = moedas < custoMagia();
-  magiaUpgradeBtn.title = '';
+  magiaUpgradeBtn.disabled = !podeUpgradarMagia();
+  magiaUpgradeBtn.title = !luva
+    ? 'Compre uma luva para desbloquear a magia'
+    : moedas < custoMagia() ? `Faltam ${custoMagia() - moedas} moedas` : '';
   document.querySelectorAll('.elem-btn').forEach(b => {
     b.classList.toggle('ativo', !!luva && b.dataset.poder === magia.elemento);
     b.setAttribute('aria-disabled', String(provacaoAtiva));
@@ -1777,6 +1871,8 @@ function lancarAdaga(resultado) {
 let _impactosAtivos = 0;
 function aplicarImpacto(resultado, x, y) {
   if (lutaPausada) return;
+  // na primeira run o boss se apresenta: nada de dano enquanto a fala roda
+  if (bloquearDanoIntro()) return;
   if (!resultado.acerto) {
     animarMonstro('erro');
     flutuante('MISS!', '#d98a8a');
@@ -2594,7 +2690,10 @@ function salvarJogo() {
       provacaoAtiva, demonioProva, provaConcluida, bencaoConcedida, elementoEscolhido,
       idItem, inventario, equipados, loja, raridadeMinima, comboMax,
       estatisticas, conquistas: [...conquistas],
-      magia: { nivel: magia.nivel, elemento: magia.elemento, ativada: magia.ativada },
+      magia: {
+        nivel: magia.nivel, elemento: magia.elemento, ativada: magia.ativada,
+        primeiraAtivacao: magia.primeiraAtivacao
+      },
       ultimoSave: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(dados));
@@ -2657,6 +2756,7 @@ function carregarJogo() {
       magia.nivel = Number(d.magia.nivel) || 1;
       magia.elemento = d.magia.elemento || 'fogo';
       magia.ativada = !!d.magia.ativada;
+      magia.primeiraAtivacao = !!d.magia.primeiraAtivacao || magia.ativada;
       magia.ate = magia.ativada ? Infinity : 0;
     }
 
@@ -2702,6 +2802,7 @@ if (!_saveCarregado) {
   hpMax = hpMaxSalvo;
   magia.ativada = magiaAtivadaSalva;
   magia.ate = magiaAteSalva;
+  if (magia.ativada) magia.cooldownAte = 0; // já em campo não precisa recarregar
   sincronizarMagia();
   hpBar.style.width = (hp / hpMax * 100) + '%';
   hpText.textContent = `${hp} / ${hpMax}`;
