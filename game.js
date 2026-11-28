@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '46';
+const ASSETS_V = '47';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -587,66 +587,69 @@ function animarChegadaBoss() {
   tocarSom('boss');
 }
 
-// sem build vale o retrato cheio original; os presets modulares só entram com peça equipada
-const BUILDS_HEROI = {
-  heroi: Object.freeze({
-    base: 'personagens/heroi-cruzado.webp', lamina: 'sprite_request/hero/presets/lamina.webp',
-    mira: 'sprite_request/hero/presets/mira.webp', amuleto: 'sprite_request/hero/presets/amuleto.webp',
-    fogo: 'sprite_request/hero/presets/fogo.webp', gelo: 'sprite_request/hero/presets/gelo.webp',
-    raio: 'sprite_request/hero/presets/raio.webp', talisma: 'sprite_request/hero/presets/talisma.webp',
-    radiante: 'sprite_request/hero/presets/radiante.webp'
-  }),
-  antimodelo: Object.freeze({
-    base: 'personagens/antimodelo-666.webp', lamina: 'sprite_request/antimodelo_666/presets/lamina.webp',
-    mira: 'sprite_request/antimodelo_666/presets/mira.webp', amuleto: 'sprite_request/antimodelo_666/presets/amuleto.webp',
-    fogo: 'sprite_request/antimodelo_666/presets/fogo.webp', gelo: 'sprite_request/antimodelo_666/presets/gelo.webp',
-    raio: 'sprite_request/antimodelo_666/presets/raio.webp', talisma: 'sprite_request/antimodelo_666/presets/talisma.webp',
-    radiante: 'sprite_request/antimodelo_666/presets/radiante.webp'
-  })
-};
-
-const ORDEM_RAR = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
-const BUILD_POR_SLOT = { arma: 'lamina', mira: 'mira', amuleto: 'amuleto', talisma: 'talisma' };
-
-// a peça mais forte manda no visual; luva elemental escolhe fogo/gelo/raio
-function buildVisualAtual() {
-  const itens = Object.values(equipados).filter(Boolean);
-  if (!itens.length) return 'base';
-  if (itens.some(i => i.rar === 'radiante')) return 'radiante';
-  const maior = Math.max(...itens.map(i => ORDEM_RAR[i.rar] ?? 0));
-  const candidatos = itens.filter(i => (ORDEM_RAR[i.rar] ?? 0) === maior);
-  const melhor = candidatos.find(i => i.slot === buildFoco) || candidatos[0];
-  if (melhor.slot === 'luva') return melhor.poder || 'fogo';
-  return BUILD_POR_SLOT[melhor.slot] || 'base';
-}
-
-const HEROI_RESERVA = {
+// o herói mantém sempre o mesmo retrato/pose; a build só coloca o item na mão
+const HEROI_RETRATO = {
   heroi: 'personagens/heroi-cruzado.webp',
   antimodelo: 'personagens/antimodelo-666.webp'
 };
+const ORDEM_RAR = { comum: 0, incomum: 1, raro: 2, epico: 3, radiante: 4 };
+const BUILD_POR_SLOT = { arma: 'lamina', mira: 'mira', amuleto: 'amuleto', talisma: 'talisma' };
+
+// a peça mais forte manda no visual; em empate o último slot equipado desempata
+function itemDominanteBuild() {
+  const itens = Object.values(equipados).filter(Boolean);
+  if (!itens.length) return null;
+  const maior = Math.max(...itens.map(i => ORDEM_RAR[i.rar] ?? 0));
+  const candidatos = itens.filter(i => (ORDEM_RAR[i.rar] ?? 0) === maior);
+  return candidatos.find(i => i.slot === buildFoco) || candidatos[0];
+}
+
+function buildVisualAtual() {
+  const item = itemDominanteBuild();
+  if (!item) return 'base';
+  if (item.rar === 'radiante') return 'radiante';
+  if (item.slot === 'luva') return item.poder || 'fogo';
+  return BUILD_POR_SLOT[item.slot] || 'base';
+}
+
+// ícone da peça dominante, com a cor da raridade, sobreposto ao retrato
+function iconeBuildHeroi() {
+  const item = itemDominanteBuild();
+  if (!item) return null;
+  const familia = modoCapeta ? 'antimodel' : 'hero';
+  const forma = item.slot === 'luva'
+    ? `luva_${item.poder || 'fogo'}`
+    : (BUILD_POR_SLOT[item.slot] || 'lamina');
+  return { src: `icones/${familia}/${item.rar}-${forma}.svg?v=${ASSETS_V}`, cor: item.cor };
+}
 
 function renderHeroi() {
   const antimodelo = modoCapeta;
   const familia = antimodelo ? 'antimodelo' : 'heroi';
-  const build = buildVisualAtual();
-  const pasta = BUILDS_HEROI[familia] || BUILDS_HEROI.heroi;
-  // chave inesperada de save antigo não pode virar "undefined.webp"
-  const arq = pasta[build] || pasta.base;
   heroi.dataset.heroi = familia;
-  heroi.dataset.build = String(pasta[build] ? build : 'base');
+  heroi.dataset.build = buildVisualAtual();
 
   const img = document.createElement('img');
   img.className = 'modelo-img heroi-img';
   img.alt = antimodelo ? 'Antimodelo 666' : 'Herói cruzado';
   img.draggable = false;
-  img.src = `${arq}?v=${ASSETS_V}`;
-  // se o preset modular falhar (cache velho, CDN ou arquivo ausente), o herói
-  // nunca fica invisível: cai no retrato antigo e, se esse também falhar, emoji
-  img.onerror = () => {
-    img.onerror = () => { heroi.textContent = antimodelo ? '😈' : '🛡️'; };
-    img.src = `${HEROI_RESERVA[familia]}?v=${ASSETS_V}`;
-  };
-  heroi.replaceChildren(img);
+  img.src = `${HEROI_RETRATO[familia]}?v=${ASSETS_V}`;
+  img.onerror = () => { img.onerror = () => { heroi.textContent = antimodelo ? '😈' : '🛡️'; }; };
+  const filhos = [img];
+
+  const item = iconeBuildHeroi();
+  if (item) {
+    heroi.style.setProperty('--rar-item', item.cor);
+    const sobre = document.createElement('img');
+    sobre.className = 'heroi-item-img';
+    sobre.src = item.src;
+    sobre.alt = '';
+    sobre.draggable = false;
+    filhos.push(sobre);
+  } else {
+    heroi.style.removeProperty('--rar-item');
+  }
+  heroi.replaceChildren(...filhos);
 }
 
 /* ---------- ícones do pack Crusader (SVG por forma, slot e raridade) ---------- */

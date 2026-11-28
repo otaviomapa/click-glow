@@ -519,6 +519,22 @@ body.modo-capeta .nome-monstro.chefe { color: #ff6b6b; }
 }
 .heroi[data-heroi="antimodelo"] .heroi-img { filter: drop-shadow(0 0 22px rgba(217, 56, 255, .75)); }
 .heroi[data-build="base"] .heroi-img { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c3) 70%, transparent)); }
+/* a build só troca o item na mão: retrato e pose continuam os mesmos */
+.heroi .heroi-item-img {
+  position: absolute; z-index: 2;
+  right: 4%; bottom: 16%;
+  width: 34%; height: 34%;
+  object-fit: contain;
+  pointer-events: none; user-select: none;
+  mix-blend-mode: screen; /* o fundo escuro do SVG some, sobra o desenho do item */
+  filter: drop-shadow(0 0 9px var(--rar-item, #fff));
+  transform: rotate(-8deg);
+  animation: heroiItemFlutuar 2.6s ease-in-out infinite;
+}
+@keyframes heroiItemFlutuar {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(-4deg) translateY(-4px); }
+}
 .heroi.atirando { animation: arremessar .32s cubic-bezier(.22,1.35,.4,1); }
 @keyframes arremessar {
   0%   { transform: translateX(0) rotate(0) scale(1); }

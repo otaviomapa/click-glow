@@ -43,9 +43,10 @@ Jogo de clique com desafio inicial, bênção elemental, loja, raridades e bosse
 - `style.css` — visual
 - `game.js` — toda a lógica
 - `monstros/anim/` — spritesheets animados (idle, hit e morte) dos 18 inimigos
-- `personagens/` — retratos base do cruzado/antimodelo e variações de build (WebP).
-  Sem nenhuma peça equipada o herói usa `heroi-cruzado.webp` (arte cheia); as
-  variações modulares só aparecem quando há build.
+- `personagens/` — retratos do cruzado e do antimodelo (WebP). O herói **sempre**
+  mantém o mesmo retrato e a mesma pose; a build só sobrepõe o ícone do item
+  equipado (com a cor da raridade) na mão dele. Sem peça equipada, fica só o
+  cruzado.
 - `icones/` — sprites SVG dos itens
 
 ## Bestiário animado
