@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '40';
+const ASSETS_V = '41';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -1240,12 +1240,28 @@ function raridadePeso(slot) {
   return RARIDADES[raridadeMinSlot(slot)];
 }
 
-function tipoAleatorio() { return TIPOS[Math.floor(Math.random() * TIPOS.length)]; }
+function tipoAleatorio() {
+  // antes da dádiva de Deus a loja não vende luva
+  const pool = bencaoConcedida ? TIPOS : TIPOS.filter(t => t.slot !== 'luva');
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 // depois da bênção a loja só oferece o elemento escolhido pelo jogador
 function elementoDaLoja() {
   if (bencaoConcedida && ELEMENTOS[elementoEscolhido]) return elementoEscolhido;
   return PODERES_LUVA[Math.floor(Math.random() * PODERES_LUVA.length)].id;
+}
+
+// a loja acompanha a dádiva: antes dela, nenhuma luva; depois, só o elemento escolhido
+function ajustarLojaBencao() {
+  const tipoLuva = TIPOS.find(t => t.slot === 'luva');
+  loja = loja.map(i => {
+    if (!i) return i;
+    if (!bencaoConcedida) return i.slot === 'luva' ? novoItem() : i;
+    if (i.slot !== 'luva' || i.poder === elementoEscolhido) return i;
+    const rar = RARIDADES.find(r => r.id === i.rar) || RARIDADES[0];
+    return criarItem(tipoLuva, rar, elementoEscolhido);
+  });
 }
 
 function novoItem() {
@@ -1742,6 +1758,8 @@ function comprar(id) {
   if (indice < 0) return;
   const item = loja[indice];
   if (!item || moedas < item.preco) return;
+  // luva só depois da dádiva de Deus; e nunca fora do elemento escolhido
+  if (item.slot === 'luva' && (!bencaoConcedida || item.poder !== elementoEscolhido)) return;
 
   moedas -= item.preco;
   inventario.push(item);
@@ -2525,6 +2543,7 @@ function concluirBencao() {
   pontos = 0;
   rodada = 1;
   mobNivel = 1;
+  ajustarLojaBencao(); // agora a loja pode vender luvas, só do elemento escolhido
 
   el('provaAviso').hidden = true;
   el('btnPause').style.display = '';
@@ -2747,6 +2766,7 @@ function carregarJogo() {
     equipados = d.equipados && typeof d.equipados === 'object' ? d.equipados : {};
     buildFoco = null;
     loja = Array.isArray(d.loja) && d.loja.length ? d.loja : [novoItemComum(), novoItem(), novoItem()];
+    ajustarLojaBencao(); // save antigo não pode reabrir luva antes da dádiva nem fora do elemento
     if (d.raridadeMinima && typeof d.raridadeMinima === 'object') raridadeMinima = d.raridadeMinima;
     comboMax = Number(d.comboMax) || 0;
     if (d.estatisticas && typeof d.estatisticas === 'object') Object.assign(estatisticas, d.estatisticas);
