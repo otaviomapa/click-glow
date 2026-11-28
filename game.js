@@ -480,7 +480,7 @@ function modeloMonstro(tipo) {
 }
 
 // muda junto com o ?v= do index.html: sprites presos no cache antigo chegavam vazios
-const ASSETS_V = '47';
+const ASSETS_V = '48';
 const _spritesProntos = new Set();
 const _spritesFalhos = new Set();
 
@@ -773,6 +773,7 @@ let elementoEscolhido = 'fogo';
 let falaTimer = 0;
 let modoCapeta = false;
 let sequencia = '';
+let sequenciaTimer = 0; // três 6 seguidos e rápidos: qualquer outro número/intervalo quebra
 let idItem = 1;
 let inventario = [];
 let equipados = {};
@@ -2646,11 +2647,18 @@ addEventListener('keydown', e => {
   if (!el('overlay').hidden) return;
   if (e.key === 'p' || e.key === 'P') { e.preventDefault(); alternarPausa(); return; }
   if (/^[0-9]$/.test(e.key)) {
-    sequencia = (sequencia + e.key).slice(-3);
-    if (sequencia === '666') {
-      sequencia = '';
-      alternarCapeta();
-      return;
+    clearTimeout(sequenciaTimer);
+    if (e.key !== '6') {
+      sequencia = ''; // qualquer outro número quebra a sequência
+    } else {
+      sequencia = (sequencia + '6').slice(-3);
+      sequenciaTimer = setTimeout(() => { sequencia = ''; }, 1200);
+      if (sequencia === '666') {
+        clearTimeout(sequenciaTimer);
+        sequencia = '';
+        alternarCapeta();
+        return;
+      }
     }
   }
   if (e.code === 'Space') { e.preventDefault(); atacar(); }
